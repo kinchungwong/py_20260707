@@ -34,6 +34,8 @@ long-lived intent down to short-lived work — each folder has its own `README.m
   going: north-star goals, architectural principles, hard constraints. Changes rarely.
 - [`claude/plans/`](claude/plans/README.md) — concrete **implementation plans** for
   specific features or milestones; the bridge from vision to tasks.
+- [`claude/spikes/`](claude/spikes/README.md) — one-off, throwaway **experiments** to
+  verify how something works or sketch a design before committing to it.
 - [`claude/tasks/`](claude/tasks/README.md) — active, granular, **checkable work items**
   that a plan decomposes into. Kept current and pruned.
 - [`claude/memory/`](claude/memory/README.md) — cumulative **facts and decisions**

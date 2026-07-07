@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Explicitly ignored
+*.ignore.*
+*.ignored.*
+*.ignore
+*.ignored
+ignore.*
+ignored.*
+
+# WAV files (project outputs)
+*.wav
