@@ -227,3 +227,6 @@ ignored.*
 
 # WAV files (project outputs)
 *.wav
+
+# PNG files (project outputs)
+*.png
