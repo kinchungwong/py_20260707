@@ -2,7 +2,7 @@
 
 Rendering matplotlib figures to PNG on this project's Linux box works with **no
 window environment at all** — proven by the FFT-plot spike
-(`../spikes/fft_plots.py`). Use this whenever a spike/tool needs to emit plots
+(`../../spikes/fft_plots.py`). Use this whenever a spike/tool needs to emit plots
 non-interactively (CI, headless runs, agent-driven runs).
 
 ## The two rules

@@ -1,7 +1,7 @@
 # Describe chords as cents above the root (not MIDI integers)
 
 The clean way to represent chords in this project — proven by the microtonal
-triad spike (`../spikes/microtonal_triads.py`) — is a list of **intervals in
+triad spike (`../../spikes/microtonal_triads.py`) — is a list of **intervals in
 cents above the root**, converted with `f = root_hz * 2**(cents/1200)`.
 
 ## Why this is the right primitive

@@ -2,7 +2,7 @@
 
 A minimal additive-synthesis recipe that reliably produces a *piano-ish* (not
 organ-ish) tone in NumPy, validated by the first spike
-(`../spikes/piano_chord_major_minor.py`). Reuse this as the starting point when
+(`../../spikes/piano_chord_major_minor.py`). Reuse this as the starting point when
 the synth is promoted into a real module.
 
 ## The recipe
