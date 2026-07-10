@@ -38,3 +38,6 @@ so:
 - Push model (whole array up front) via `sd.play`: see
   [[piano-note-synthesis-recipe]]. The pull model here is what open-ended /
   interactive audio should build on.
+- The "our own buffer between generator and callback" hedge above cashed out (for
+  *events*, not samples) as the deque in [[event-queue]]; the callback drains it
+  each block at exactly the `frames` cadence discussed here.

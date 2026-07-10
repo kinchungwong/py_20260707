@@ -2,7 +2,8 @@
 
 **Status: speculation, not a committed decision.**
 **Committed baseline: topology A** — the audio callback drains the event queue
-directly (to be proven by the `event_queue` spike). This file records the
+directly (proven by the `event_queue` spike; see
+[`event-queue`](../memory/concurrency/event-queue.md)). This file records the
 *alternative* we chose not to build, so we can revisit it deliberately.
 
 ## The idea (topology B)
@@ -47,10 +48,13 @@ it only reads the latest snapshot and turns it into samples.
 
 ## Trigger to revisit
 
-Reopen this if **either**:
+The `event_queue` spike proved the *queue mechanics* are cheap (a non-blocking
+deque drain, latency bounded by one block), so the hand-off itself does not force
+topology B. Reopen this if **either**:
 
-- the `event_queue` spike (topology A) shows the callback's drain-and-apply work
-  causing underruns / missed deadlines under realistic polyphony, **or**
+- the callback's drain-**and-apply** work (voice allocation + summed-voice render,
+  measured later in `polyphony_voices`, not the queue drain) causes underruns /
+  missed deadlines under realistic polyphony, **or**
 - per-event processing grows beyond trivial (heavy voice allocation, effects,
   anything that allocates or blocks) and no longer belongs on the audio thread.
 

@@ -21,8 +21,8 @@ class NoteEvent:
 - The event is tagged with the source that caused the transition — **not** every
   source touching the note (see reconciliation below).
 - The `perf_counter()` timestamp is captured at emit time. It rides the event
-  through the [[event-queue]] (to be built) and is what the latency spike measures
-  against — capture it once, at the source, and never recompute it downstream.
+  through the [[event-queue]] and is what the latency spike measures against —
+  capture it once, at the source, and never recompute it downstream.
 
 ## The router: reference-count by holder-set
 
@@ -53,5 +53,5 @@ note-on, no matter how the presses overlap.
 
 - Clean per-source press/release come from [[key-events-note-on-off]] (keyboard)
   and [[mouse-hit-test-piano]] (mouse).
-- Next: [[event-queue]] pushes this `NoteEvent` stream across the thread boundary
-  to the audio callback (committed topology A).
+- [[event-queue]] pushes this `NoteEvent` stream across the thread boundary to
+  the audio callback (committed topology A) — a lock-free, non-blocking deque.

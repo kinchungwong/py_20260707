@@ -57,15 +57,16 @@ spikes on it rather than re-drawing the keyboard.
       (`--selftest`). `InputRouter` reference-counts each note by holder-set (note-on
       on 0→1, note-off on 1→0); `NoteEvent(kind, midi, source, t)` is the interface
       the audio side consumes. Approach in `../memory/input/note-event-reconciliation.md`.
-- [ ] Spike `event_queue`: GUI loop pushes semantic events (note_on/off, chord,
-      continuous controls) onto a **thread-safe queue**; a consumer drains it
-      **non-blocking** and applies them. **Committed topology A**: the audio
-      callback drains the queue directly (worker-thread topology B parked in
-      `../speculations/audio-consumer-worker-thread.md`). No audio needed to prove
-      it — check no dropped/reordered events, producer never blocks, bounded
-      transit latency. Builds on `../memory/sounddevice/outputstream/blocksize.md`.
-      *De-risk note: only needs a note-on/off source, so attempt it right after
-      `kbd_input` (before mouse/integration) — the thread hand-off is the real risk.*
+- [x] Spike `event_queue`: GUI loop pushes semantic events onto a **thread-safe
+      queue**; a consumer drains it **non-blocking** and applies them. **Committed
+      topology A**: the audio callback drains the queue directly (worker-thread
+      topology B still parked in `../speculations/audio-consumer-worker-thread.md`).
+      → `../spikes/event_queue.py` (`--selftest`); decision + properties in
+      `../memory/concurrency/event-queue.md`. Carrier is a lock-free
+      `collections.deque` (NOT `queue.Queue` — its lock is an RT hazard); verified
+      no drop/reorder under flood, producer never blocks (~0.15 µs/push), transit
+      latency bounded by one drain interval (~8.7 ms block period). Fed by the real
+      `InputRouter`. No audio, as planned.
 - [ ] Spike `realtime_envelope_release`: sustain a voice **while a key is held**,
       click-free release on key-up — replaces the fixed-1 s render from the batch
       spikes. Consumes drained note_on/note_off events. *Q: attack/sustain/release
