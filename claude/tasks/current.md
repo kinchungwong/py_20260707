@@ -31,6 +31,10 @@ A sequence of mostly-spikes building toward a playable instrument: draw → capt
 input → hand events across a thread boundary → make sound → measure latency. Input
 is split into separate keyboard and mouse spikes, then integrated; pitch stays
 plain 12-TET / MIDI for now (microtonal deferred — see the end of this section).
+**Milestone reached:** the full path is now wired end to end and playable
+(`playable_instrument`); the canonical signal chain lives in
+`../memory/architecture/signal-chain.md`. What's left here is measurement
+(`input_to_sound_latency`) and the deferred microtonal layout.
 
 Shared keyboard widget: `../spikes/piano_keyboard.py` (geometry, drawing, hit-test,
 `note_name`) — extracted from `kbd_input`/`mouse_input`; build the remaining GUI
@@ -86,9 +90,22 @@ spikes on it rather than re-drawing the keyboard.
       Cost: 16 voices ≈ 2.8% of the block deadline (~15 µs/voice) — 16 is comfy,
       true ceiling deferred to `input_to_sound_latency` on the real device. FFT
       confirms 3 notes → 3 independent peaks.
-- [ ] Spike `input_to_sound_latency`: measure keypress→audible onset and find what
-      dominates (audio blocksize vs event-poll interval vs envelope attack). Serves
-      the latency non-negotiable in `../vision/`.
+- [x] Spike `playable_instrument`: **wire it all end to end** — keyboard/mouse →
+      `InputRouter` → `EventQueue` → `PolySynth` → sounddevice. First playable
+      instrument. → `../spikes/playable_instrument.py` (`--selftest` + PNG);
+      architecture in `../memory/architecture/signal-chain.md`. ~30 lines of glue
+      over four reused-unmodified modules; GUI thread = producer, audio callback =
+      consumer, one lock-free deque between them. Chord from both sources sounds
+      once; focus-loss = all-notes-off (never a cursor grab). Seed of the real app.
+- [x] Spike `input_to_sound_latency`: measure keypress→audible onset and find what
+      dominates. → `../spikes/input_to_sound_latency.py` (`--selftest` + PNG; real
+      device mode for term (d)); finding in `../memory/sounddevice/outputstream/latency.md`.
+      **A:** device output latency dominates (~11.4 ms); the lever is **`latency='low'`**
+      (~35 → ~9 ms), NOT a smaller requested blocksize (which does nothing).
+      With `latency='low'`: onset ~12.9 ms mean / ~19 ms p99; software glue ~0.1 µs.
+      Tail (max ~28 ms) is Python/GC jitter — the vision's inherent-limits caveat.
+      **Committed `latency='low'`; applied to `playable_instrument`.** Front-end
+      (OS→PyGame) unmeasured (needs mic loopback).
 - [ ] Deferred: Spike `microtonal_layout` — non-piano / isomorphic layout exposing
       the neutral third etc. Parked until the interactive path works end-to-end;
       ties back to `../memory/musictheory/chords-as-cents-above-root.md`.

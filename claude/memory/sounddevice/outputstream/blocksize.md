@@ -41,3 +41,6 @@ so:
 - The "our own buffer between generator and callback" hedge above cashed out (for
   *events*, not samples) as the deque in [[event-queue]]; the callback drains it
   each block at exactly the `frames` cadence discussed here.
+- The block size is set by the latency config, not chosen freely: [[latency]]
+  shows `latency='low'` yields tiny (~95-frame) blocks and is the real latency
+  lever — requesting a blocksize alone does not lower latency.
