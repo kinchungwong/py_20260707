@@ -77,9 +77,15 @@ spikes on it rather than re-drawing the keyboard.
       accumulator gives seam-continuity for free. Scope: **monophonic** (last-note
       priority), pure sine, flat sustain, block-granular events (jitter ≤ 1 block).
       Piano decay + inharmonic partials layer on later (synth-module task).
-- [ ] Spike `polyphony_voices`: multiple held keys → summed voices with allocation
-      + headroom/limiting in the callback. *Q: how many voices before underruns;
-      how to allocate/steal?*
+- [x] Spike `polyphony_voices`: multiple held keys → summed voices with allocation
+      + headroom/limiting in the callback. → `../spikes/polyphony_voices.py`
+      (`--selftest` + PNG); technique in `../memory/acoustics/polyphony-voice-pool.md`.
+      **A:** fixed pool (**16**); allocate = same-note / free / **steal the quietest**
+      (releasing voice goes first, no age bookkeeping); steal is click-free by
+      reusing the envelope retrigger; `tanh` soft-limit on the mix never clips.
+      Cost: 16 voices ≈ 2.8% of the block deadline (~15 µs/voice) — 16 is comfy,
+      true ceiling deferred to `input_to_sound_latency` on the real device. FFT
+      confirms 3 notes → 3 independent peaks.
 - [ ] Spike `input_to_sound_latency`: measure keypress→audible onset and find what
       dominates (audio blocksize vs event-poll interval vs envelope attack). Serves
       the latency non-negotiable in `../vision/`.
