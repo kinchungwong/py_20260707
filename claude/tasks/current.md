@@ -36,12 +36,17 @@ plain 12-TET / MIDI for now (microtonal deferred — see the end of this section
       Establishes the PyGame window, draw, and basic event loop. →
       `../spikes/keyboard_static_display.py` (`--selftest` for a headless smoke
       test); headless-verify technique in `../memory/pygame/headless-render-to-png.md`.
-- [ ] Spike `kbd_input`: computer keyboard → highlight the mapped on-screen key
+- [x] Spike `kbd_input`: computer keyboard → highlight the mapped on-screen key
       on `KEYDOWN`/`KEYUP`, track the held-key set. Defines the QWERTY→MIDI-note
-      map. No audio. *Q: clean press/release pairs? redraw only changed keys?*
-- [ ] Spike `mouse_input`: mouse → hit-test `MOUSEBUTTONDOWN`/`UP` against the
-      drawn key rects, highlight + track pressed. No audio. *Q: press-then-drag-off,
-      drag-onto-another-key, button released outside the window?*
+      map. No audio. → `../spikes/kbd_input.py` (`--selftest`). Answered both Qs:
+      clean press/release pairs (no auto-repeat by default → note-on/off in
+      `../memory/pygame/key-events-note-on-off.md`); yes to per-key dirty-rect
+      redraw, minding black-over-white overlap.
+- [x] Spike `mouse_input`: mouse → hit-test `MOUSEBUTTONDOWN`/`UP` against the
+      drawn key rects, highlight + track pressed. No audio. → `../spikes/mouse_input.py`
+      (`--selftest`); model in `../memory/pygame/mouse-hit-test-piano.md` (black-first
+      hit-test, glissando drag). Edge cases handled; **release-outside-window is
+      platform-dependent — pending one manual run to confirm** (mitigation: `set_grab`).
 - [ ] Spike `input_integration`: unify keyboard + mouse behind one abstraction
       that emits a single **note-on / note-off event stream** (tagged by source),
       reconciling held-state from both. *Q: the event interface the audio side consumes?*
