@@ -196,6 +196,16 @@ class Voice:
         self.env = Envelope()
         self.last_gain: np.ndarray | None = None    # for the selftest to inspect
 
+    def note_on(self, freq: float) -> None:
+        """Retune + gate attack. Phase is deliberately NOT reset -> click-free
+        retrigger (only the pitch changes). This is the voice interface PolySynth
+        calls; a richer voice (partials/decay) implements the same two methods."""
+        self.freq = freq
+        self.env.note_on()
+
+    def note_off(self) -> None:
+        self.env.note_off()
+
     def render(self, frames: int) -> np.ndarray:
         inc = TWO_PI * self.freq / SR
         phases = self.phase + inc * np.arange(1, frames + 1)

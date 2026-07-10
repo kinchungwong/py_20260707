@@ -47,10 +47,9 @@ increment, not the phase — no click.
   (~8.7 ms) — the bound event_queue already set. Sample-accurate placement (the
   callback gets a DAC-time arg) is deferred to `input_to_sound_latency`.
 - **Pure sine, flat sustain** to isolate the envelope. Piano realism layers on
-  cleanly and was NOT redone here: swap the flat SUSTAIN for the recipe's
-  per-partial exponential decay, and the sine for the inharmonic-partial stack —
-  both just *multiply* onto this same voice. That convergence belongs with the
-  "promote `synth_note` into a module" synthesis task.
+  cleanly — since realized in [[streaming-piano-voice]]: the inharmonic-partial
+  stack + per-partial exponential decay multiply onto this same gate (a held note
+  then decays like a piano instead of flat-sustaining).
 
 ## Gotchas
 

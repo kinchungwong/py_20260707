@@ -3,7 +3,9 @@
 A minimal additive-synthesis recipe that reliably produces a *piano-ish* (not
 organ-ish) tone in NumPy, validated by the first spike
 (`../../spikes/piano_chord_major_minor.py`). Reuse this as the starting point when
-the synth is promoted into a real module.
+the synth is promoted into a real module. **Now realized as a streaming, per-block,
+polyphonic voice** in [[streaming-piano-voice]] (this recipe folded into the
+real-time path — affordable: ~26% of the block deadline at 16 voices).
 
 ## The recipe
 

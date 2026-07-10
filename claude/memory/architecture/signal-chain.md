@@ -22,9 +22,10 @@ map; each stage has its own detail memory (linked below).
    producer; the audio callback is the consumer. [[event-queue]]
 3. **Voice the notes.** Each block the audio callback drains the queue, allocates
    / steals voices, and renders summed polyphony. [[polyphony-voice-pool]]
-4. **Envelope + oscillator per voice.** Phase-continuous sine × a gate envelope
-   with click-free attack/release. [[realtime-gate-envelope]]  (Timbre to layer on:
-   [[piano-note-synthesis-recipe]].)
+4. **Envelope + oscillator per voice.** A gate envelope with click-free
+   attack/release [[realtime-gate-envelope]], times the oscillator. Default voice is
+   the rich [[streaming-piano-voice]] (inharmonic partials + natural decay);
+   `playable_instrument --voice sine` swaps in the plain sine.
 5. **Out.** `tanh`-limited mono mix written into the `OutputStream` callback's
    `outdata`, honoring the `frames` it asks for. [[blocksize]]
 

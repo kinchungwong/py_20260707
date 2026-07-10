@@ -87,9 +87,11 @@ MAX_VOICES = 16         # polyphony pool size; fixed => no per-block object allo
 class PolySynth:
     """A fixed pool of voices summed and soft-limited in the callback."""
 
-    def __init__(self, queue: EventQueue, max_voices: int = MAX_VOICES):
+    def __init__(self, queue: EventQueue, max_voices: int = MAX_VOICES,
+                 voice_factory=None):
         self.queue = queue
-        self.voices = [Voice(0.0) for _ in range(max_voices)]
+        factory = voice_factory or (lambda: Voice(0.0))   # swap in a richer voice here
+        self.voices = [factory() for _ in range(max_voices)]
         self.voice_midi: list[int | None] = [None] * max_voices   # which note each voice holds
         self.status_flags = 0
 
@@ -112,13 +114,12 @@ class PolySynth:
     def handle(self, ev: NoteEvent) -> None:
         if ev.kind is NoteKind.ON:
             i = self._alloc(ev.midi)
-            self.voices[i].freq = midi_to_freq(ev.midi)
-            self.voices[i].env.note_on()          # ramp from current level -> click-free
+            self.voices[i].note_on(midi_to_freq(ev.midi))   # retune + gate attack
             self.voice_midi[i] = ev.midi
         elif ev.kind is NoteKind.OFF:
             for i, m in enumerate(self.voice_midi):
                 if m == ev.midi and self.voices[i].env.stage in (EnvStage.ATTACK, EnvStage.SUSTAIN):
-                    self.voices[i].env.note_off()
+                    self.voices[i].note_off()
                     break
 
     def render(self, frames: int, limit: bool = True) -> np.ndarray:

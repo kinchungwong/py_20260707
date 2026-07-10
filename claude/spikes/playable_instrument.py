@@ -20,7 +20,9 @@ Reuses, unmodified:
     keyboard + mouse into one deduplicated note-on/off stream,
   * `EventQueue` (`event_queue`) -- the lock-free, non-blocking topology-A carrier,
   * `PolySynth` (`polyphony_voices`) -- pooled voices, allocation/stealing, gate
-    envelope (`realtime_envelope_release`), tanh headroom.
+    envelope (`realtime_envelope_release`), tanh headroom -- with the rich
+    `PianoVoice` (`piano_voice`) swapped in by default via `voice_factory`
+    (`--voice sine` falls back to the plain sine).
 
 The only NEW code is the ~30-line glue: dispatch a PyGame event through the router
 and, on each emitted event, (1) PUSH it to the queue (-> audio) and (2) repaint the
@@ -61,8 +63,9 @@ Finding
 
 Run
 ---
-    python claude/spikes/playable_instrument.py             # real window + audio; play it
-    python claude/spikes/playable_instrument.py --selftest  # headless: drive the whole chain, PNG
+    python claude/spikes/playable_instrument.py                # real window + audio (piano voice)
+    python claude/spikes/playable_instrument.py --voice sine   # ... with the plain sine voice
+    python claude/spikes/playable_instrument.py --selftest     # headless: drive the whole chain, PNG
 """
 
 from __future__ import annotations
@@ -78,6 +81,7 @@ from input_integration import InputRouter, NoteEvent, NoteKind, Source, MARGIN, 
 from kbd_input import WHITE_QWERTY, BLACK_QWERTY
 from event_queue import EventQueue, SR, BLOCK_FRAMES
 from polyphony_voices import PolySynth
+from piano_voice import PianoVoice
 
 
 # --- the glue: route one input event to BOTH the audio queue and the screen ----
@@ -173,6 +177,9 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--selftest", action="store_true",
                     help="headless: drive the full chain with scripted events, assert + PNG")
+    ap.add_argument("--voice", choices=("piano", "sine"), default="piano",
+                    help="timbre: 'piano' = rich inharmonic-partial voice with natural "
+                         "decay (default); 'sine' = plain sine")
     args = ap.parse_args()
 
     if args.selftest:
@@ -183,10 +190,12 @@ def main() -> None:
 
     pygame.init()
     screen = pygame.display.set_mode((WIN_W, WIN_H))
-    pygame.display.set_caption("playable_instrument — QWERTY + mouse, Esc to quit")
+    pygame.display.set_caption(f"playable_instrument ({args.voice}) — QWERTY + mouse, Esc to quit")
 
     queue = EventQueue()
-    synth = PolySynth(queue)
+    # 'sine' -> PolySynth's default Voice; 'piano' -> the rich PianoVoice.
+    voice_factory = PianoVoice if args.voice == "piano" else None
+    synth = PolySynth(queue, voice_factory=voice_factory)
     state = _make_state(pygame, screen, queue)
     render_full(screen, state["wk"], state["bk"], state["router"].held)
     pygame.display.flip()
@@ -197,8 +206,8 @@ def main() -> None:
 
     import sounddevice as sd
 
-    print("playable! home row = white keys, the row above = black keys; "
-          "click/drag the mouse too. Esc to quit.")
+    print(f"playable ({args.voice} voice)! home row = white keys, the row above = "
+          "black keys; click/drag the mouse too. Esc to quit.")
     # latency='low' is the dominant lever: it cuts device output latency from
     # ~35 ms (default) to ~9 ms on this backend -- see input_to_sound_latency.
     with sd.OutputStream(samplerate=SR, channels=1, dtype="float32",

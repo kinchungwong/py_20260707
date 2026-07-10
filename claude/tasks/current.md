@@ -18,12 +18,24 @@
       `../spikes/outputstream_callback.py`; block-size findings in
       `../memory/sounddevice/outputstream/blocksize.md`. This is the audio-engine
       foundation the interactive GUI feeds into.
-- [ ] Promote the spike's `synth_note` / `synth_chord` into a real, tested module
-      (pytest). Decide the module boundary before coding — likely a `Note` render
-      function separate from mixing/normalization. Adopt cents-above-root as the
-      chord API (see memory), not MIDI integers.
+- [x] Spike: bring the batch timbre into the STREAMING voice — inharmonic partials
+      + per-partial decay + phase randomization, per-block, drop-in to `PolySynth`.
+      → `../spikes/piano_voice.py` (`--selftest` + PNG); `../memory/acoustics/streaming-piano-voice.md`.
+      **`PianoVoice`** (same `note_on/note_off/render/.env` interface as `Voice`,
+      swapped via `PolySynth(voice_factory=...)`). Held notes now decay like a piano;
+      affordable (~26% of the block deadline at 16 voices, ~39% at `latency='low'`).
+- [ ] Promote the spike's synth into a real, tested module (pytest). Now concrete:
+      the `Voice`/`PianoVoice` interface (`note_on(freq)`, `note_off()`, `render`,
+      `.env`) is the seam. Decide the module boundary (Note/oscillator vs envelope
+      vs mixing/normalization). Adopt cents-above-root as the pitch API (see memory),
+      not MIDI ints — the voice takes a frequency, so cents/JI slot in upstream.
+- [x] Swap `PianoVoice` into `playable_instrument` as the **default** voice, with
+      `--voice piano|sine` to A/B against the plain sine. → `../spikes/playable_instrument.py`
+      (`voice_factory` wired to the `--voice` choice; both paths pass `--selftest`).
 - [ ] Future spike: just-intonation color — derive cents from frequency ratios
       (e.g. neutral third 11/9 ≈ 347.4c) instead of a fixed cent grid.
+- [ ] Refinement (deferred): crossfade voice-stealing (kill the small steal artifact
+      the piano voice adds), and reclaim held-but-fully-decayed voice slots.
 
 ## Interactive GUI (PyGame)
 
