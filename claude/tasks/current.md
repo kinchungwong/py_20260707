@@ -32,6 +32,10 @@ input → hand events across a thread boundary → make sound → measure latenc
 is split into separate keyboard and mouse spikes, then integrated; pitch stays
 plain 12-TET / MIDI for now (microtonal deferred — see the end of this section).
 
+Shared keyboard widget: `../spikes/piano_keyboard.py` (geometry, drawing, hit-test,
+`note_name`) — extracted from `kbd_input`/`mouse_input`; build the remaining GUI
+spikes on it rather than re-drawing the keyboard.
+
 - [x] Spike: static keyboard display — draw a piano keyboard, quit on Esc.
       Establishes the PyGame window, draw, and basic event loop. →
       `../spikes/keyboard_static_display.py` (`--selftest` for a headless smoke

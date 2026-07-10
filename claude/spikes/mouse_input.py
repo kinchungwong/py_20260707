@@ -15,13 +15,14 @@ the key currently under the cursor (or none, over empty space). Moving the curso
 turns the old note off and the new one on; releasing turns the active note off.
 This is the glissando behaviour a real touch/mouse instrument wants. No sound yet.
 
-Reuse: the keyboard geometry, drawing, and note naming come from `kbd_input` (this
-spike adds only the mouse hit-test + drag state machine). A small **margin** is
-added around the keyboard so "drag onto empty space" is exercisable *inside* the
-window, not only by leaving it.
+Reuse: the keyboard geometry, drawing, note naming, and hit-testing come from the
+shared `piano_keyboard` module -- this spike adds only the mouse drag state machine.
+A small **margin** is added around the keyboard so "drag onto empty space" is
+exercisable *inside* the window, not only by leaving it.
 
 Hit-test order matters: black keys are drawn on top of white keys, so they must be
-tested FIRST -- a click in the overlap region belongs to the black key.
+tested FIRST -- a click in the overlap region belongs to the black key. (That rule
+is implemented in `piano_keyboard.hit_test`.)
 
 Finding
 -------
@@ -43,9 +44,9 @@ Finding
   project policy anyway (../policy/input-policy.md: confining the cursor is off
   limits). For platforms lacking implicit capture, mitigate without grabbing (e.g.
   mouse-leave / focus-loss = all-notes-off). (Manually verified.)
-- Reused kbd_input's geometry/drawing wholesale; only hit_test + the drag state
-  machine are new. Every remaining GUI spike will want this same keyboard widget
-  -- a shared `piano_keyboard.py` helper is starting to look worthwhile.
+- Keyboard geometry/drawing/hit-testing now come from the shared `piano_keyboard`
+  module (extracted from this spike + kbd_input); only the drag state machine and
+  the margin layout are specific to mouse input.
 
 Run
 ---
@@ -58,24 +59,13 @@ from __future__ import annotations
 import argparse
 import os
 
-from kbd_input import (
-    build_keys, render_full, redraw_key, note_name,
+from piano_keyboard import (
     WIDTH as KB_W, HEIGHT as KB_H,
+    note_name, build_keys, render_full, redraw_key, hit_test, offset_keys,
 )
 
 MARGIN = 24
 WIN_W, WIN_H = KB_W + 2 * MARGIN, KB_H + 2 * MARGIN
-
-
-def hit_test(pos, white_keys, black_keys):
-    """MIDI note under `pos`, or None. Black keys first (they sit on top)."""
-    for bk in black_keys:
-        if bk["rect"].collidepoint(pos):
-            return bk["midi"]
-    for wk in white_keys:
-        if wk["rect"].collidepoint(pos):
-            return wk["midi"]
-    return None
 
 
 def _set_active(pygame, screen, state, new_midi, white_keys, black_keys):
@@ -126,11 +116,6 @@ def process_event(pygame, screen, event, state, white_keys, black_keys) -> bool:
     return True
 
 
-def _offset_into_margin(white_keys, black_keys):
-    for k in white_keys + black_keys:
-        k["rect"] = k["rect"].move(MARGIN, MARGIN)
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--selftest", action="store_true",
@@ -148,7 +133,7 @@ def main() -> None:
     pygame.display.set_caption("mouse_input spike — click & drag the keys, Esc to quit")
 
     white_keys, black_keys = build_keys()
-    _offset_into_margin(white_keys, black_keys)
+    offset_keys(white_keys + black_keys, MARGIN, MARGIN)   # inset the keyboard inside the margin
     state = {"down": False, "note": None, "held": set()}
 
     render_full(screen, white_keys, black_keys, state["held"])

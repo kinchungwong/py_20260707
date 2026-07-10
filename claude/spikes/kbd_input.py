@@ -17,17 +17,19 @@ into note-on/note-off events.
 
 What this does
 --------------
-Draws the same two-octave keyboard as keyboard_static_display.py, but each key now
-carries a MIDI note number. A QWERTY->MIDI map (home row = white keys, the row
-above = black keys, one octave + the octave C) lets you "play": pressing a mapped
-key highlights that piano key and adds it to the held set; releasing un-highlights
-it. Unmapped drawn keys simply never light up (a computer keyboard doesn't cover a
-whole piano -- that's honest, not a bug). Note-on/note-off are also printed.
+Draws the two-octave keyboard (geometry/drawing now live in the shared
+`piano_keyboard` module), but each key carries a MIDI note number. A QWERTY->MIDI
+map (home row = white keys, the row above = black keys, one octave + the octave C)
+lets you "play": pressing a mapped key highlights that piano key and adds it to the
+held set; releasing un-highlights it. Unmapped drawn keys simply never light up (a
+computer keyboard doesn't cover a whole piano -- that's honest, not a bug).
+Note-on/note-off are also printed.
 
 Redraw strategy: on each change we repaint only the affected key and call
 ``pygame.display.update(dirty_rect)`` -- NOT a full-keyboard redraw. The wrinkle
 is that black keys overlap their white neighbours, so repainting a white key must
 re-overlay any black key sitting on top of it (else the white paint erases it).
+That logic lives in `piano_keyboard.redraw_key`.
 
 Finding
 -------
@@ -64,18 +66,9 @@ from __future__ import annotations
 import argparse
 import os
 
-# --- geometry (matches keyboard_static_display.py) ---------------------------
-
-N_OCTAVES = 2
-WHITE_PER_OCTAVE = 7
-N_WHITE = N_OCTAVES * WHITE_PER_OCTAVE          # 14
-WHITE_W, WHITE_H = 60, 260
-WIDTH, HEIGHT = N_WHITE * WHITE_W, WHITE_H
-BLACK_W, BLACK_H = int(WHITE_W * 0.6), int(WHITE_H * 0.6)
-BLACK_AFTER = (0, 1, 3, 4, 5)                   # black key sits right of these octave-white-indices
-
-# White-key MIDI numbers for two octaves starting at C4 (MIDI 60).
-WHITE_MIDIS = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83]
+from piano_keyboard import (
+    WIDTH, HEIGHT, note_name, build_keys, render_full, redraw_key,
+)
 
 # --- QWERTY -> MIDI layout ---------------------------------------------------
 # Home row = white keys of the lower octave (a..k = C4..C5); row above = the
@@ -84,85 +77,6 @@ WHITE_MIDIS = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83]
 WHITE_QWERTY = [("a", 60), ("s", 62), ("d", 64), ("f", 65),
                 ("g", 67), ("h", 69), ("j", 71), ("k", 72)]
 BLACK_QWERTY = [("w", 61), ("e", 63), ("t", 66), ("y", 68), ("u", 70)]
-
-# --- colors ------------------------------------------------------------------
-
-BG = (24, 24, 28)
-WHITE_KEY = (238, 238, 234)
-WHITE_PRESSED = (120, 180, 235)
-BLACK_KEY = (18, 18, 20)
-BLACK_PRESSED = (70, 120, 180)
-BORDER = (70, 70, 76)
-
-_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-
-
-def note_name(midi: int) -> str:
-    return f"{_NAMES[midi % 12]}{midi // 12 - 1}"
-
-
-def build_keys():
-    """Return (white_keys, black_keys). Each key is a dict {midi, rect, black}.
-    Import pygame lazily so this module's constants are importable without a display."""
-    import pygame
-
-    white_keys = []
-    for i in range(N_WHITE):
-        rect = pygame.Rect(i * WHITE_W, 0, WHITE_W - 1, WHITE_H)
-        white_keys.append({"midi": WHITE_MIDIS[i], "rect": rect, "black": False})
-
-    black_keys = []
-    for octave in range(N_OCTAVES):
-        for offset in BLACK_AFTER:
-            white_index = octave * WHITE_PER_OCTAVE + offset
-            boundary_x = (white_index + 1) * WHITE_W
-            rect = pygame.Rect(boundary_x - BLACK_W // 2, 0, BLACK_W, BLACK_H)
-            midi = WHITE_MIDIS[white_index] + 1      # the sharp above that natural
-            black_keys.append({"midi": midi, "rect": rect, "black": True})
-
-    return white_keys, black_keys
-
-
-def _draw_black(screen, bkey, held):
-    import pygame
-    color = BLACK_PRESSED if bkey["midi"] in held else BLACK_KEY
-    pygame.draw.rect(screen, color, bkey["rect"])
-
-
-def _draw_white(screen, wkey, held, black_keys):
-    """Repaint a white key, then re-overlay any black key covering it (black keys
-    are drawn on top of whites, so a naive white repaint would erase them)."""
-    import pygame
-    color = WHITE_PRESSED if wkey["midi"] in held else WHITE_KEY
-    pygame.draw.rect(screen, color, wkey["rect"])
-    pygame.draw.rect(screen, BORDER, wkey["rect"], 1)
-    for bk in black_keys:
-        if wkey["rect"].colliderect(bk["rect"]):
-            _draw_black(screen, bk, held)
-
-
-def render_full(screen, white_keys, black_keys, held):
-    import pygame
-    screen.fill(BG)
-    for wk in white_keys:
-        _draw_white(screen, wk, held, black_keys)
-    # whites already re-overlay their blacks, but redraw all blacks once more so
-    # keys at the shared seams are unambiguous.
-    for bk in black_keys:
-        _draw_black(screen, bk, held)
-
-
-def redraw_key(screen, midi, white_keys, black_keys, held):
-    """Incrementally repaint just the key for `midi`; return its dirty rect."""
-    for bk in black_keys:
-        if bk["midi"] == midi:
-            _draw_black(screen, bk, held)
-            return bk["rect"]
-    for wk in white_keys:
-        if wk["midi"] == midi:
-            _draw_white(screen, wk, held, black_keys)
-            return wk["rect"]
-    return None
 
 
 def main() -> None:
