@@ -14,6 +14,9 @@ Due to the inherent interactivity, we would like to keep the delay between user 
 
 ## Project vital information
 
+- Python environment: the repo-root `.venv`. Always run code via `.venv/bin/python`,
+  never a bare `python`/`python3` — see
+  [`claude/policy/locating_python_environment.md`](claude/policy/locating_python_environment.md).
 - Platform: Linux only, via PyGame
 - Interactivity: PyGame + Python sounddevice
     - (Note) Some demo scripts may be terminal with and without interactivity
