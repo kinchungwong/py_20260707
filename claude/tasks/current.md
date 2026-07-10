@@ -24,11 +24,21 @@
       **`PianoVoice`** (same `note_on/note_off/render/.env` interface as `Voice`,
       swapped via `PolySynth(voice_factory=...)`). Held notes now decay like a piano;
       affordable (~26% of the block deadline at 16 voices, ~39% at `latency='low'`).
-- [ ] Promote the spike's synth into a real, tested module (pytest). Now concrete:
-      the `Voice`/`PianoVoice` interface (`note_on(freq)`, `note_off()`, `render`,
-      `.env`) is the seam. Decide the module boundary (Note/oscillator vs envelope
-      vs mixing/normalization). Adopt cents-above-root as the pitch API (see memory),
-      not MIDI ints — the voice takes a frequency, so cents/JI slot in upstream.
+- [x] **Increment 1 — promote the synth core** into `src/pypiano_2607/` with a
+      pytest suite (**DONE 2026-07-09**). Plan:
+      [`../plans/library-promotion.md`](../plans/library-promotion.md). Built
+      bottom-up from the frozen spikes; 68 pytest tests, all green.
+    - [x] `config.py` — one home for SR / block / AMP / env times / partial params / MAX_VOICES
+    - [x] `pitch.py` — `midi_to_freq`, `cents_to_hz` (the only pitch knowledge; synth never sees MIDI)
+    - [x] `events.py` — `NoteKind`, `Source`, `NoteEvent(kind, sounder_id, freq|None, source, t)`
+    - [x] `queue.py` — `EventQueue` (topology-A deque, verbatim)
+    - [x] `audio/envelope.py` — `EnvStage`, `Envelope`
+    - [x] `audio/voice.py` — `Voice` Protocol (runtime-checkable) + `SineVoice` + `PianoVoice` (master `AMP` at the mix)
+    - [x] `audio/polysynth.py` — `PolySynth` (routes on `sounder_id`/`freq`; master gain + tanh limit)
+    - [x] `pyproject.toml` (pytest `pythonpath=src`, `perf`/`slow` marks) + `tests/` (8 files)
+    - [x] Green: pytest 65 + 3 perf = 68 · `../../tools/run_spike_tests.py` 14/14 (spikes untouched) · `../../tools/check_docs_links.py` clean
+    - Deferred to the input increment: `InputRouter`, the one-block transit-latency test.
+    - **Not yet ear-tested** through a live device (headless-verified only — worth a human A/B before the next increment).
 - [x] Swap `PianoVoice` into `playable_instrument` as the **default** voice, with
       `--voice piano|sine` to A/B against the plain sine. → `../spikes/playable_instrument.py`
       (`voice_factory` wired to the `--voice` choice; both paths pass `--selftest`).

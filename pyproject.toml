@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pypiano_2607"
+version = "0.1.0"
+description = "Interactive piano synthesis (promoted from spikes)"
+requires-python = ">=3.13"
+dependencies = ["numpy", "sounddevice", "pygame", "sortedcontainers", "cffi"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = ["-m", "not perf"]
+markers = [
+    "perf: machine-dependent timing assertions (deselected by default)",
+    "slow: threaded / longer-running tests",
+]

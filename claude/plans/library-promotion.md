@@ -1,7 +1,7 @@
 # Plan — Promote the spike signal chain into `src/pypiano_2607/`
 
-**Status: Draft** (awaiting human approval) · Created 2026-07-09 · Increment 1 of a
-multi-step promotion.
+**Status: Approved — increment 1 complete** (2026-07-09) · Created 2026-07-09 ·
+Increment 1 of a multi-step promotion (input / app / microtonal to follow).
 
 Promote the working interactive-instrument spikes into a real, maintained Python
 package with a **pytest** suite — *without modifying the spikes*, which stay frozen
