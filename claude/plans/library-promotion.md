@@ -1,7 +1,7 @@
 # Plan — Promote the spike signal chain into `src/pypiano_2607/`
 
-**Status: Approved — increments 1–2 complete** (2026-07-10) · Created 2026-07-09 ·
-Synth core + input layer done; app / microtonal to follow.
+**Status: Approved — increments 1–2 complete; increment 3 (app) planned 2026-07-10** ·
+Created 2026-07-09 · Synth core + input layer done; app active, microtonal to follow.
 
 Promote the working interactive-instrument spikes into a real, maintained Python
 package with a **pytest** suite — *without modifying the spikes*, which stay frozen
@@ -224,12 +224,173 @@ end-to-end.
 import pygame); tests set `SDL_VIDEODRIVER=dummy`. The input policy still binds —
 **no `pygame.event.set_grab`** anywhere (`../policy/input-policy.md`). Spikes frozen.
 
+## Increment 3 — the app (active, 2026-07-10)
+
+**Goal:** promote the frozen [`playable_instrument`](../spikes/playable_instrument.py)
+spike into a real, tested **app layer** — a **`PianoApp`** class (replacing the spike's
+procedural `state` dict) that wires the full live signal chain
+**PyGame loop → `InputRouter` → `EventQueue` → `PolySynth` →
+`sounddevice.OutputStream(latency='low')`**. This is a **faithful port** (human
+decision, 2026-07-10): same behavior as the spike, **no new features** — no velocity,
+no sustain pedal, no octave-shift (the upper octave, MIDI 73–83, stays mouse-only, as
+in the spike). Two pieces deferred out of the input layer are **promoted to the
+library** here — the **mouse-glissando** drag state machine and the **window
+geometry** — and this increment performs the **public-API promotion** deferred from
+increment 2 (export `InputRouter` + the app surface from the package root). [[signal-chain]]
+
+**Target — NEW files:**
+```
+src/pypiano_2607/
+  mouse.py     — MouseGlissando: the single-active-mouse-note drag state machine,
+                 promoted from the spike's _mouse_to + m_down/m_note. pygame-free AND
+                 events-free (stdlib only): hit-test results (a MIDI int or None) go
+                 IN; ("release", old)/("press", new) transition tuples come OUT.
+  app.py       — PianoApp: the reusable playable shell. Owns router + queue + synth +
+                 keyboard model + glissando + the visual held-set; methods
+                 dispatch(event)->bool, emit(ev), all_notes_off(), run(), close().
+                 pygame AND sounddevice are imported LAZILY inside methods, so importing
+                 the module stays headless. NO argparse / __main__ / device I/O at
+                 module scope (that lives in examples/ — altitude, see below).
+examples/
+  play_app.py  — the runnable CLI, mirroring examples/play_synth.py (NOT library code):
+                 --voice piano|sine, --selftest (headless). Constructs PianoApp and
+                 calls .run() (live) or drives the dispatch+callback path headless.
+tests/
+  test_mouse.py — MouseGlissando unit tests (pure, no pygame) + import guard.
+  test_app.py   — headless: construct PianoApp under SDL dummy, feed synthetic PyGame
+                  events through dispatch(), drive synth.callback by hand, assert the
+                  acceptance behaviors below.
+```
+
+**Edited files (the sanctioned additive public-API promotion — no logic changes):**
+```
+src/pypiano_2607/__init__.py     — export InputRouter, MouseGlissando, PianoApp.
+src/pypiano_2607/gui/__init__.py — add MARGIN=24, WIN_W=WIDTH+2*MARGIN,
+                                   WIN_H=HEIGHT+2*MARGIN (pure arithmetic) + __all__.
+tests/test_gui_package.py        — add "pypiano_2607.app" and "pypiano_2607.mouse" to
+                                   LAZY_MODULES, and also assert 'sounddevice' stays
+                                   unloaded (app must import sounddevice lazily too).
+```
+No **logic-bearing** increment-1/2 file is touched (config, pitch, events, queue,
+router, audio/\*, gui/keyboard, gui/qwerty). **Spikes stay frozen.**
+
+**Design decisions (several forced by an adversarial review of the draft, 2026-07-10):**
+
+1. **`PianoApp` class (working name; trivially renamable, cf. `sounder_id`).**
+   Encapsulates the spike's `state` dict as instance attributes
+   (`pygame, screen, router, queue, synth, glissando, wk, bk, key_to_midi`) and its
+   glue as methods. `__init__(*, voice="piano")` lazily `import pygame`, `pygame.init()`,
+   `set_mode((WIN_W, WIN_H))`, `build_keys` + `offset_keys(wk+bk, MARGIN, MARGIN)`,
+   `key_to_midi(pygame)`, `InputRouter()`, `EventQueue()`,
+   `PolySynth(queue, voice_factory = PianoVoice if voice=="piano" else SineVoice)`,
+   `MouseGlissando()`, then paints the unpressed keyboard. `run()` opens
+   `sd.OutputStream(samplerate=SR, channels=1, dtype='float32',
+   callback=synth.callback, latency='low')` and runs the `pygame.event.wait()` loop;
+   `close()` calls `pygame.quit()`. **The same `dispatch(event)` runs live and under
+   the tests** — the spike's key testability property, preserved.
+
+2. **`emit(ev)` MUST early-return on `None`.** `InputRouter.press`/`release` return
+   `None` on every *reconciled* transition (`router.py:53,58,64`) — that is the router's
+   whole job. `emit` guards `if ev is None: return` (exactly `playable_instrument.py:92`)
+   before `queue.push(ev)` + `redraw_key(screen, ev.sounder_id, wk, bk, router.held)` +
+   `display.update`. Omitting the guard crashes on kbd+mouse-same-note and on
+   mouse-up of a keyboard-held note. (`ev.sounder_id == midi` today, so `redraw_key`
+   — keyed by MIDI — is addressed correctly; a comment notes the coupling since
+   `events.py` warns sounder_id is *not* a pitch.)
+
+3. **`MouseGlissando` — exact `_mouse_to` semantics** (`playable_instrument.py:109-119`
+   + the dispatch bookkeeping at 149,151,153-155): state `down: bool`, `note: int|None`.
+   - `press(midi)` sets `down=True` **regardless of `midi`** (a click in the 24px
+     margin arms the drag with `midi=None`), then the change-detection below.
+   - `motion(midi)` returns `[]` when `not down` (a bare mouse-move must be silent);
+     else the change-detection.
+   - `release()` returns the release of the current `note` (if any) and resets
+     `down=False, note=None`.
+   - change-detection `_move_to(new)`: `if new == note: return []`; else emit
+     `("release", note)` if `note is not None`, then `("press", new)` if
+     `new is not None`, then `note = new`.
+   The app maps each `("press"/"release", midi)` to `router.press/release(midi,
+   Source.MOUSE)` then `emit(...)`, so mouse↔keyboard reconciliation still happens in
+   the one `InputRouter` (verified sound by the review).
+
+3a. **Window geometry in `gui/__init__.py`** (mirrors `input_integration.py:75-76`):
+   `MARGIN=24`, `WIN_W=WIDTH+2*MARGIN`, `WIN_H=HEIGHT+2*MARGIN`. Homed in the gui
+   package `__init__` (already edited for exports) so `gui/keyboard.py` stays
+   byte-frozen.
+
+4. **`all_notes_off()` rewritten for the 5-field NoteEvent.** For each `midi` in
+   `list(router.held)`, `queue.push(NoteEvent(NoteKind.OFF, midi, None,
+   Source.KEYBOARD, perf_counter()))` (sounder_id=midi, freq=None) — each held note is
+   in ATTACK/SUSTAIN so `PolySynth.handle` frees it by `sounder_id` (`polysynth.py:60`,
+   review-confirmed) — then `router = InputRouter()`, reset the glissando,
+   `render_full(unpressed)` + `flip`. (The spike's 4-field construct at line 127 is now
+   wrong arity.)
+
+5. **Altitude — the library stays pure; the CLI lives in `examples/`.** Every promoted
+   `src/` module is import-only (no argparse, no `__main__`, no device);
+   `examples/play_synth.py` is explicitly "not part of the library." So `PianoApp`
+   (reusable class, incl. `run()`) lives in `src/pypiano_2607/app.py`, but the
+   **argparse `main()`, `--voice/--selftest`, and `if __name__=="__main__"`** live in
+   `examples/play_app.py`, mirroring `play_synth.py`. `--selftest`
+   `os.environ.setdefault`s the SDL dummy drivers **before** constructing `PianoApp`
+   (which imports+inits pygame). A `[project.scripts]` console entry is **deferred**
+   (open question) — run via `.venv/bin/python examples/play_app.py`.
+
+6. **The spike→library reconciliations applied** (the 12 deltas): new package import
+   paths; `ev.midi`→`ev.sounder_id`; `synth.voice_midi`→`synth.voice_sounder`; use
+   `gui.qwerty.key_to_midi(pygame)` (not the inline dict); explicit `SineVoice` for the
+   sine default; the live path renders the callback's `frames` (never `BLOCK_FRAMES`);
+   the router already mints `freq`, so the press/release/emit glue is otherwise
+   unchanged. [[sounder-id]]
+
+**Testing (pytest, headless — mirrors `test_router.py` / `test_integration.py`):**
+- `test_mouse.py`: `press`→one press-transition; drag to a new key→release-old +
+  press-new (glissando); drag to same key→`[]`; `motion` while not `down`→`[]`;
+  margin-click (`press(None)`) then drag onto a key→arms then presses; `release`→
+  release-transition + note cleared. (Pure — no pygame, no synth.)
+- `test_app.py` (`SDL_VIDEODRIVER`/`AUDIODRIVER=dummy` at module top; a fixture that
+  `close()`s each `PianoApp` — repeated `set_mode` needs teardown, cf.
+  `test_keyboard.py:27`): via synthetic `pygame.event.Event`s through `dispatch()` +
+  `synth.callback(out, frames, None, None)`:
+  - kbd C4 + mouse G4 → `router.held == {60,67}`, `active_count()==2`,
+    `{s for s in synth.voice_sounder if s is not None} == {60,67}`, peak>0;
+  - release both → `active_count()==0` (after the release fade);
+  - hold a note, `WINDOWFOCUSLOST` → `active_count()==0`;
+  - mouse glissando C4→E4 while dragging → `router.held == {64}`;
+  - kbd + mouse on the SAME note → exactly one voice (reconciliation holds);
+  - `K_ESCAPE` / `QUIT` → `dispatch()` returns False.
+- `test_gui_package.py`: `"pypiano_2607.app"` and `"pypiano_2607.mouse"` join
+  `LAZY_MODULES`; the guard also asserts `'sounddevice' not in sys.modules` (app's
+  sounddevice import must be lazy too).
+- **Both nets green:** full pytest suite + `../../tools/run_spike_tests.py` 14/14
+  (spikes untouched) + `../../tools/check_docs_links.py` clean.
+
+**Acceptance = the spike's `--selftest` behaviors, preserved** (kbd+mouse chord →
+2 reconciled voices; release → 0; focus-loss → all-notes-off → 0; glissando drag),
+now asserted as deterministic pytest. **Not unit-tested** (as with the spike): the
+live `run()` loop + real device I/O — only `dispatch()` is headless-driveable.
+
+**Constraints preserved:** topology A (callback owns the drain, no worker thread);
+`latency='low'`; focus-loss ⇒ all-notes-off, **never** `set_grab`; pygame + sounddevice
+stay lazy so importing the package/app is headless; `.venv/bin/python` only, no pip;
+spikes frozen; increment-1/2 logic files untouched.
+
+**Bookkeeping on completion:** tick `../tasks/current.md`; a memory note only if an
+integration fact proves non-obvious ([[signal-chain]]); a `../retrospectives/`
+handoff; `check_docs_links` clean; commit (additive diff).
+
+**The live ear-test** (`--voice piano` vs `sine` on a real device — the human A/B
+outstanding since increment 1) is best finally done here.
+
+**Open questions:** class name `PianoApp` vs `Instrument`; whether to add a
+`[project.scripts]` console entry (`pypiano = ...`) — deferred unless wanted.
+
 ## Later increments (sketch — not in scope now)
 
 - **Input:** → now **Increment 2 (active)**, detailed above.
-- **App:** the `playable_instrument` shell (focus-loss all-notes-off,
-  `latency='low'`) as an `Instrument`/`App` class instead of the procedural `state`
-  dict.
+- **App:** → now **Increment 3 (active)**, detailed above — the `playable_instrument`
+  shell as a `PianoApp` class (mouse-glissando + window geometry promoted to the
+  library; `InputRouter`/`PianoApp` exported from the package root).
 - **Microtonal:** `microtonal_layout` — now unblocked; cents/JI live upstream of the
   (unchanged) synth. [[chords-as-cents-above-root]]
 - **Deferred refinements:** crossfade voice-stealing; reclaim held-but-decayed voice
