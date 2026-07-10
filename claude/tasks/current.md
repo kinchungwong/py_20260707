@@ -38,7 +38,16 @@
     - [x] `pyproject.toml` (pytest `pythonpath=src`, `perf`/`slow` marks) + `tests/` (8 files)
     - [x] Green: pytest 65 + 3 perf = 68 · `../../tools/run_spike_tests.py` 14/14 (spikes untouched) · `../../tools/check_docs_links.py` clean
     - Deferred to the input increment: `InputRouter`, the one-block transit-latency test.
-    - **Not yet ear-tested** through a live device (headless-verified only — worth a human A/B before the next increment).
+    - **Not yet ear-tested** through a live device (headless-verified only). Demo:
+      `examples/play_synth.py` — worth a human A/B.
+- [x] **Increment 2 — promote the input layer** into `src/pypiano_2607/` (**DONE 2026-07-10**).
+      Added `router.py` (`InputRouter` — mints `sounder_id = pitch-slot (MIDI)` +
+      `freq = midi_to_freq(midi)`), `gui/keyboard.py` (the widget; pygame lazy),
+      `gui/qwerty.py` (QWERTY→MIDI map). Increment-1 files untouched; spikes frozen.
+    - [x] 106 pytest tests green (103 default incl. 2 slow, +3 perf); pygame-lazy invariant
+          regression-guarded across all import surfaces; `set_grab` policy verified absent.
+    - Deferred to the **app increment**: the mouse glissando drag state machine + the pygame
+      event-loop glue (`playable_instrument` → an `Instrument`/`App` class, `latency='low'`).
 - [x] Swap `PianoVoice` into `playable_instrument` as the **default** voice, with
       `--voice piano|sine` to A/B against the plain sine. → `../spikes/playable_instrument.py`
       (`voice_factory` wired to the `--voice` choice; both paths pass `--selftest`).

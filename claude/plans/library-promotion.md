@@ -1,7 +1,7 @@
 # Plan — Promote the spike signal chain into `src/pypiano_2607/`
 
-**Status: Approved — increment 1 complete** (2026-07-09) · Created 2026-07-09 ·
-Increment 1 of a multi-step promotion (input / app / microtonal to follow).
+**Status: Approved — increments 1–2 complete** (2026-07-10) · Created 2026-07-09 ·
+Synth core + input layer done; app / microtonal to follow.
 
 Promote the working interactive-instrument spikes into a real, maintained Python
 package with a **pytest** suite — *without modifying the spikes*, which stay frozen
@@ -177,12 +177,56 @@ is the clean answer to the "mixing/normalization vs oscillator" boundary questio
   `input_to_sound_latency`) belongs in this increment (as a `slow` integration test)
   or the input increment. **Leaning:** defer to input.
 
+## Increment 2 — input layer (active, 2026-07-09)
+
+**Goal:** promote the GUI input path so `NoteEvent`s originate from real keyboard +
+mouse input — **minting `sounder_id`s and resolving pitch→Hz at this edge**.
+Everything here is headless-testable (SDL dummy); the live app shell (sounddevice
+wiring) stays the next increment.
+
+**Target — NEW files only; increment-1 modules stay untouched:**
+```
+src/pypiano_2607/
+  router.py      — InputRouter: reference-count note holders by source; press/release
+                   RETURN NoteEvents. Mints sounder_id = the pitch slot (MIDI for now)
+                   and freq = midi_to_freq(midi) (None on release). pygame-free.
+  gui/
+    __init__.py
+    keyboard.py  — the piano_keyboard widget: geometry, Key, build_keys, offset_keys,
+                   hit_test (black-first), note_name, render_full, redraw_key, colors.
+                   pygame imported LAZILY (the module imports headless).
+    qwerty.py    — WHITE_QWERTY / BLACK_QWERTY (QWERTY→MIDI) + a key_to_midi(pygame) helper.
+```
+`InputRouter` is available as `pypiano_2607.router.InputRouter`; the widget as
+`pypiano_2607.gui.keyboard`. (Promoting either into the top-level `__init__` public
+API is left to the app increment, so increment 1's verified files stay frozen.)
+
+**Source spikes → target (frozen; read, don't edit):** `input_integration.py`
+(`InputRouter`) → `router.py`; `piano_keyboard.py` → `gui/keyboard.py`;
+`kbd_input.py` (the QWERTY map) → `gui/qwerty.py`.
+
+**The one design decision (forced, to preserve reconciliation):**
+`sounder_id = the note's pitch slot` (the MIDI number, for now), so keyboard-C4 and
+mouse-C4 reconcile to one sounding object — the [[note-event-reconciliation]]
+behavior. The router computes `freq = midi_to_freq(midi)` at emit, making it the
+**pitch→Hz resolution point** (cents/JI slot in here later, upstream of the unchanged
+synth). See [[sounder-id]].
+
+**Tests (pytest, headless):** `test_router.py` (reconciliation → one on/one off; the
+emitted event carries `sounder_id==midi`, `freq==midi_to_freq(midi)` on ON / `None`
+on OFF); `test_keyboard.py` (SDL-dummy: 14 white + 10 black, black-first hit-test,
+`note_name`, dirty-rect repaint); `test_qwerty.py` (map is well-formed); and a
+**slow** `test_integration.py` porting event_queue **T3** (transit latency ≤ one drain
+interval, now driveable by the real `InputRouter`) + a router→queue→`PolySynth`
+end-to-end.
+
+**Constraints:** pygame stays LAZY (importing `router`/`qwerty`/the package must not
+import pygame); tests set `SDL_VIDEODRIVER=dummy`. The input policy still binds —
+**no `pygame.event.set_grab`** anywhere (`../policy/input-policy.md`). Spikes frozen.
+
 ## Later increments (sketch — not in scope now)
 
-- **Input:** promote the `piano_keyboard` widget, the QWERTY map, and `InputRouter`
-  (events.py sibling) + the kbd/mouse→router glue. **This is where note-ids are
-  minted and MIDI/cents→Hz happens.** Pulls reusable bits from `kbd_input` /
-  `mouse_input` / `keyboard_static_display`.
+- **Input:** → now **Increment 2 (active)**, detailed above.
 - **App:** the `playable_instrument` shell (focus-loss all-notes-off,
   `latency='low'`) as an `Instrument`/`App` class instead of the procedural `state`
   dict.
