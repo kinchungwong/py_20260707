@@ -51,9 +51,12 @@ spikes on it rather than re-drawing the keyboard.
       (`--selftest`); model in `../memory/pygame/mouse-hit-test-piano.md` (black-first
       hit-test, glissando drag). Edge cases handled; release-outside-window confirmed
       fine by manual test (SDL2 implicit mouse capture; no `set_grab` needed).
-- [ ] Spike `input_integration`: unify keyboard + mouse behind one abstraction
+- [x] Spike `input_integration`: unify keyboard + mouse behind one abstraction
       that emits a single **note-on / note-off event stream** (tagged by source),
-      reconciling held-state from both. *Q: the event interface the audio side consumes?*
+      reconciling held-state from both. → `../spikes/input_integration.py`
+      (`--selftest`). `InputRouter` reference-counts each note by holder-set (note-on
+      on 0→1, note-off on 1→0); `NoteEvent(kind, midi, source, t)` is the interface
+      the audio side consumes. Approach in `../memory/input/note-event-reconciliation.md`.
 - [ ] Spike `event_queue`: GUI loop pushes semantic events (note_on/off, chord,
       continuous controls) onto a **thread-safe queue**; a consumer drains it
       **non-blocking** and applies them. **Committed topology A**: the audio
