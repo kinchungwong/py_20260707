@@ -45,8 +45,8 @@ plain 12-TET / MIDI for now (microtonal deferred — see the end of this section
 - [x] Spike `mouse_input`: mouse → hit-test `MOUSEBUTTONDOWN`/`UP` against the
       drawn key rects, highlight + track pressed. No audio. → `../spikes/mouse_input.py`
       (`--selftest`); model in `../memory/pygame/mouse-hit-test-piano.md` (black-first
-      hit-test, glissando drag). Edge cases handled; **release-outside-window is
-      platform-dependent — pending one manual run to confirm** (mitigation: `set_grab`).
+      hit-test, glissando drag). Edge cases handled; release-outside-window confirmed
+      fine by manual test (SDL2 implicit mouse capture; no `set_grab` needed).
 - [ ] Spike `input_integration`: unify keyboard + mouse behind one abstraction
       that emits a single **note-on / note-off event stream** (tagged by source),
       reconciling held-state from both. *Q: the event interface the audio side consumes?*

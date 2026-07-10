@@ -32,15 +32,25 @@ under the cursor, or none over empty space:
 Add a **margin** around the keyboard so "drag onto empty space → note-off" is
 reachable inside the window; otherwise every in-window point hits some white key.
 
-## Release-outside-the-window (⚠ needs manual confirmation)
+## Release-outside-the-window (confirmed: not a problem on Linux/SDL 2.28.4)
 
-Clear the note on **any** `MOUSEBUTTONUP` regardless of cursor position — but that
-only helps if the event is delivered. Whether SDL delivers `MOUSEBUTTONUP` when
-the button is released **fully outside** the window is platform-dependent; if it
-isn't delivered, the note sticks. Robust fix: `pygame.event.set_grab(True)` for the
-duration of a drag (confines the cursor so the release always lands in-window).
-*Status: not yet confirmed on this machine — verify with a real window, then update
-this note.*
+While a mouse button is held, **SDL2 implicitly captures the mouse**, so the app
+keeps getting events even when the cursor is outside the window. Manually confirmed
+on this machine:
+
+- `MOUSEMOTION` continues to arrive with **out-of-window coordinates** → `hit_test`
+  returns `None` → the note turns off the instant the cursor leaves the keyboard
+  (same path as drag-to-empty). The highlight clears on exit.
+- `MOUSEBUTTONUP` is still delivered when you release outside → **no stuck note**;
+  releasing out there has no lingering effect. Keeping the button down and moving
+  back in resumes glissando.
+
+So `pygame.event.set_grab(True)` is **not needed here** — and in any case it is
+**banned by project policy** (see `../../policy/input-policy.md`): confining or
+grabbing the cursor is off limits. For any future platform/backend where implicit
+capture doesn't hold, mitigate some other way (e.g. treat mouse-leave / focus-loss
+as all-notes-off), never by grabbing.
+(Env: pygame 2.6.1, SDL 2.28.4, Linux; confirmed 2026-07-09.)
 
 ## Related
 

@@ -35,12 +35,14 @@ Finding
 - The margin around the keyboard makes "drag onto empty space -> note-off"
   reachable *inside* the window; without it, every in-window point hits some white
   key and drag-off is only possible by leaving the window entirely.
-- Button-released-outside-the-window: our handler clears the note for ANY
-  MOUSEBUTTONUP regardless of position -- but that only helps *if the event is
-  delivered*. Whether SDL delivers BUTTONUP when you release fully outside the
-  window is platform-dependent and is exactly what the manual test checks. The
-  robust fix if it's NOT delivered is ``pygame.event.set_grab(True)`` for the
-  duration of a drag (confines the cursor so the release always lands in-window).
+- Button-released-outside-the-window: CONFIRMED fine on Linux/SDL 2.28.4. SDL2
+  implicitly captures the mouse while a button is held, so (1) MOUSEMOTION keeps
+  arriving with out-of-window coords -> the note turns off the moment the cursor
+  leaves the keyboard, and (2) MOUSEBUTTONUP is still delivered on release -> no
+  stuck note. ``pygame.event.set_grab(True)`` is NOT needed here -- and is BANNED by
+  project policy anyway (../policy/input-policy.md: confining the cursor is off
+  limits). For platforms lacking implicit capture, mitigate without grabbing (e.g.
+  mouse-leave / focus-loss = all-notes-off). (Manually verified.)
 - Reused kbd_input's geometry/drawing wholesale; only hit_test + the drag state
   machine are new. Every remaining GUI spike will want this same keyboard widget
   -- a shared `piano_keyboard.py` helper is starting to look worthwhile.

@@ -32,6 +32,9 @@ long-lived intent down to short-lived work — each folder has its own `README.m
 
 - [`claude/vision/`](claude/vision/README.md) — the enduring **why** and where we're
   going: north-star goals, architectural principles, hard constraints. Changes rarely.
+- [`claude/policy/`](claude/policy/README.md) — hard **off-limits**: things that are
+  never allowed, full stop, for safety and user-trust reasons. Absolute prohibitions,
+  kept explicit so they're never relitigated or quietly reintroduced.
 - [`claude/plans/`](claude/plans/README.md) — concrete **implementation plans** for
   specific features or milestones; the bridge from vision to tasks.
 - [`claude/spikes/`](claude/spikes/README.md) — one-off, throwaway **experiments** to
