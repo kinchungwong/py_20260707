@@ -67,10 +67,16 @@ spikes on it rather than re-drawing the keyboard.
       no drop/reorder under flood, producer never blocks (~0.15 µs/push), transit
       latency bounded by one drain interval (~8.7 ms block period). Fed by the real
       `InputRouter`. No audio, as planned.
-- [ ] Spike `realtime_envelope_release`: sustain a voice **while a key is held**,
+- [x] Spike `realtime_envelope_release`: sustain a voice **while a key is held**,
       click-free release on key-up — replaces the fixed-1 s render from the batch
-      spikes. Consumes drained note_on/note_off events. *Q: attack/sustain/release
-      per-block in a streaming callback?*
+      spikes. Consumes drained note_on/note_off events. → `../spikes/realtime_envelope_release.py`
+      (`--selftest` + preview PNG); technique in `../memory/acoustics/realtime-gate-envelope.md`.
+      First spike that makes sound from the interactive path. **A: yes** — per-block
+      ASR state machine carrying `(stage, level)`; click-free = ramp from the
+      *current* level (release) / re-attack from current (retrigger); phase
+      accumulator gives seam-continuity for free. Scope: **monophonic** (last-note
+      priority), pure sine, flat sustain, block-granular events (jitter ≤ 1 block).
+      Piano decay + inharmonic partials layer on later (synth-module task).
 - [ ] Spike `polyphony_voices`: multiple held keys → summed voices with allocation
       + headroom/limiting in the callback. *Q: how many voices before underruns;
       how to allocate/steal?*

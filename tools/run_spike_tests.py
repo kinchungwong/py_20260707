@@ -41,6 +41,7 @@ CHECKS = [
     ("mouse_input.py",             ["--selftest"], "selftest"),
     ("input_integration.py",       ["--selftest"], "selftest"),
     ("event_queue.py",             ["--selftest"], "selftest"),
+    ("realtime_envelope_release.py", ["--selftest"], "selftest"),
     ("piano_keyboard.py",          [],             "render"),
     ("piano_chord_major_minor.py", ["--no-play"],  "smoke"),
     ("microtonal_triads.py",       ["--no-play"],  "smoke"),
