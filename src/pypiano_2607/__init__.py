@@ -10,6 +10,9 @@ from .pitch import midi_to_freq, cents_to_hz
 from .events import NoteEvent, NoteKind, Source
 from .queue import EventQueue
 from .audio import Envelope, EnvStage, Voice, SineVoice, PianoVoice, PolySynth
+from .router import InputRouter
+from .mouse import MouseGlissando
+from .app import PianoApp
 
 __all__ = [
     "midi_to_freq",
@@ -24,4 +27,7 @@ __all__ = [
     "SineVoice",
     "PianoVoice",
     "PolySynth",
+    "InputRouter",
+    "MouseGlissando",
+    "PianoApp",
 ]

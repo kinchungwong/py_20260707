@@ -23,10 +23,13 @@ import pytest
 # install (pyproject pythonpath=src only applies inside pytest, not a bare subprocess).
 _SRC = str(Path(__file__).resolve().parents[1] / "src")
 
-# Every import surface the plan/module docstrings promise stays pygame-free.
+# Every import surface the plan/module docstrings promise stays pygame-free (and, for
+# the app, sounddevice-free too -- both are imported lazily inside methods).
 LAZY_MODULES = [
     "pypiano_2607",
     "pypiano_2607.router",
+    "pypiano_2607.mouse",
+    "pypiano_2607.app",
     "pypiano_2607.gui",
     "pypiano_2607.gui.keyboard",
     "pypiano_2607.gui.qwerty",
@@ -42,6 +45,7 @@ def test_import_does_not_load_pygame(module):
         "import sys, importlib",
         f"importlib.import_module({module!r})",
         f"assert 'pygame' not in sys.modules, 'eager pygame import from {module}'",
+        f"assert 'sounddevice' not in sys.modules, 'eager sounddevice import from {module}'",
         "print('ok')",
     ])
     env = dict(os.environ, PYTHONPATH=_SRC)

@@ -21,6 +21,12 @@ from .keyboard import (
 )
 from .qwerty import WHITE_QWERTY, BLACK_QWERTY, key_to_midi
 
+# Window geometry: the keyboard inset into a margin (promoted from the input_integration
+# spike). The app opens a WIN_W x WIN_H window and offsets the keys by MARGIN so that a
+# mouse drag onto empty space (-> note-off) stays reachable inside the window.
+MARGIN = 24
+WIN_W, WIN_H = WIDTH + 2 * MARGIN, HEIGHT + 2 * MARGIN
+
 __all__ = [
     "Key",
     "build_keys",
@@ -32,6 +38,9 @@ __all__ = [
     "WIDTH",
     "HEIGHT",
     "N_WHITE",
+    "MARGIN",
+    "WIN_W",
+    "WIN_H",
     "WHITE_QWERTY",
     "BLACK_QWERTY",
     "key_to_midi",

@@ -48,6 +48,24 @@
           regression-guarded across all import surfaces; `set_grab` policy verified absent.
     - Deferred to the **app increment**: the mouse glissando drag state machine + the pygame
       event-loop glue (`playable_instrument` → an `Instrument`/`App` class, `latency='low'`).
+- [x] **Increment 3 — the app** into `src/pypiano_2607/` (**DONE 2026-07-10**). Promoted the
+      `playable_instrument` spike into a **`PianoApp`** class (`app.py`) wiring PyGame →
+      `InputRouter` → `EventQueue` → `PolySynth` → `sounddevice(latency='low')`. Faithful
+      port (no velocity/sustain/octave-shift). The two deferred pieces were promoted to the
+      library: the mouse-glissando state machine → `mouse.py` (`MouseGlissando`, pygame-free)
+      and the window geometry (`MARGIN`/`WIN_W`/`WIN_H`) → `gui/`. `InputRouter` /
+      `MouseGlissando` / `PianoApp` now exported from the package root; CLI in
+      `examples/play_app.py` (`--voice piano|sine`, headless `--selftest`). Plan:
+      [`../plans/library-promotion.md`](../plans/library-promotion.md).
+    - [x] 123 pytest tests green (128 incl. 2 slow + 3 perf). New `test_app.py` (headless:
+          synthetic PyGame events through the live `dispatch()` + hand-driven callback —
+          kbd+mouse chord → 2 reconciled voices, release → 0, focus-loss all-notes-off,
+          glissando drag, focus-loss-resets-active-drag) + `test_mouse.py`; the pygame-lazy
+          guard extended to also cover `app`/`mouse` and to forbid eager `sounddevice`.
+    - [x] Topology A; `latency='low'`; focus-loss ⇒ all-notes-off, no `set_grab`; pygame +
+          sounddevice stay lazy (import guard); increment-1/2 logic files + spikes frozen (14/14).
+    - **Live ear-test through a real device still open** — the human A/B
+      (`.venv/bin/python examples/play_app.py [--voice sine]`); DSP unchanged so low risk.
 - [x] Swap `PianoVoice` into `playable_instrument` as the **default** voice, with
       `--voice piano|sine` to A/B against the plain sine. → `../spikes/playable_instrument.py`
       (`voice_factory` wired to the `--voice` choice; both paths pass `--selftest`).
