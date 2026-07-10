@@ -1,7 +1,7 @@
 # Plan — Promote the spike signal chain into `src/pypiano_2607/`
 
-**Status: Approved — increments 1–2 complete; increment 3 (app) planned 2026-07-10** ·
-Created 2026-07-09 · Synth core + input layer done; app active, microtonal to follow.
+**Status: Approved — increments 1–3 complete; increment 4 (Just Intonation option) done 2026-07-10** ·
+Created 2026-07-09 · Synth core + input layer + app done; JI opt-in added. Other microtonal → future spikes.
 
 Promote the working interactive-instrument spikes into a real, maintained Python
 package with a **pytest** suite — *without modifying the spikes*, which stay frozen
@@ -385,13 +385,63 @@ outstanding since increment 1) is best finally done here.
 **Open questions:** class name `PianoApp` vs `Instrument`; whether to add a
 `[project.scripts]` console entry (`pypiano = ...`) — deferred unless wanted.
 
+## Increment 4 — Just Intonation, as an option (active, 2026-07-10)
+
+**Goal:** add **Just Intonation as an option** — 12-TET stays the default; a 5-limit JI
+tuning is opt-in via a CLI flag. **Scope (human decision): JI ONLY.** Other microtonal
+systems (non-12-EDO, arbitrary scales) are explicitly OUT — they need co-designed UI +
+mechanics and must begin as **spikes** first. Spikes stay untouched.
+
+**How it plugs in:** the `InputRouter` was designed as the pitch→Hz resolution point
+("a cents/JI slot can live here later"). That slot is now used: `InputRouter` takes a
+**`tuning` callable (`midi → Hz`)**, defaulting to 12-TET `midi_to_freq` — fully
+backward-compatible (existing mint is byte-identical). The synth never sees it, and
+`sounder_id` stays the MIDI pitch slot, so reconciliation + voice allocation are unchanged.
+
+**Target — NEW file:**
+```
+src/pypiano_2607/tuning.py — JI_5LIMIT_RATIOS (1/1,16/15,9/8,6/5,5/4,4/3,45/32,3/2,8/5,
+                             5/3,9/5,15/8); just_tuning(tonic=60) -> a midi->Hz closure
+                             (tonic anchored to its 12-TET Hz, pure 2/1 octaves);
+                             tonic_to_midi (note name -> midi; sharp = '#' or 's', flat =
+                             'b' -- 's'/flats are shell-safe, '#' is a shell comment char).
+                             pygame-free.
+tests/test_tuning.py       — ratio table, anchoring, pure octaves, below-tonic wrap,
+                             tonic-octave-cancels, name parsing, import guard.
+```
+**Edited (additive / backward-compatible):**
+```
+router.py            — InputRouter(tuning=midi_to_freq); press mints freq = tuning(midi).
+app.py               — PianoApp(voice=..., tuning=None); all_notes_off recreates the
+                       router WITH self._tuning (keeps the temperament across focus-loss).
+__init__.py          — export just_tuning, tonic_to_midi.
+examples/play_app.py — --tuning 12tet|ji (default 12tet), --tonic C (note name);
+                       ap.error on a bad tonic.
+tests/{test_router,test_app,test_gui_package}.py — JI coverage + tuning in the lazy guard.
+```
+No spike touched; the synth core + gui untouched.
+
+**Decisions (human-chosen):** 5-limit standard ratios; a **selectable tonic** (`--tonic`,
+default C), anchored to its 12-TET frequency (the tonic matches ET, other notes are
+just-tuned around it). A runtime toggle is out — tuning is chosen at launch (the
+router/synth are construction-time), matching the "command-line option" ask.
+
+**Acceptance:** `just_tuning(60)(67) == midi_to_freq(60)·3/2` (just fifth); octaves pure;
+JI audibly differs from ET; the default `InputRouter()` / `PianoApp()` stay exactly
+12-TET; the JI tuning survives the focus-loss all-notes-off router reset. 137 pytest
+green; spike net 14/14; spikes frozen.
+
 ## Later increments (sketch — not in scope now)
 
 - **Input:** → now **Increment 2 (active)**, detailed above.
 - **App:** → now **Increment 3 (active)**, detailed above — the `playable_instrument`
   shell as a `PianoApp` class (mouse-glissando + window geometry promoted to the
   library; `InputRouter`/`PianoApp` exported from the package root).
-- **Microtonal:** `microtonal_layout` — now unblocked; cents/JI live upstream of the
-  (unchanged) synth. [[chords-as-cents-above-root]]
+- **Just Intonation:** → now **Increment 4 (active)**, detailed above — a pluggable
+  `tuning` at the `InputRouter` edge, 5-limit JI opt-in, 12-TET default.
+- **Other microtonal (spikes first):** non-12-EDO / isomorphic layouts, or JI derived
+  from arbitrary frequency ratios (e.g. 11/9 neutral third) — deliberately deferred to
+  new spikes (co-designed UI + mechanics), NOT this library increment.
+  [[chords-as-cents-above-root]]
 - **Deferred refinements:** crossfade voice-stealing; reclaim held-but-decayed voice
   slots.

@@ -174,6 +174,23 @@ def test_sine_voice_constructs_and_sounds():
         a.close()
 
 
+def test_ji_tuning_flows_through_and_survives_focus_loss():
+    from pypiano_2607.tuning import just_tuning
+    from pypiano_2607.pitch import midi_to_freq
+    a = PianoApp(voice="sine", tuning=just_tuning(60))    # 5-limit JI, tonic C4
+    try:
+        ev = a.router.press(67, Source.KEYBOARD)          # G4 -> just fifth, not 12-TET
+        assert ev.freq == pytest.approx(midi_to_freq(60) * 3 / 2)
+        # 67 is held; focus loss pushes an all-notes-off AND recreates the router --
+        # which must KEEP the JI tuning, not silently fall back to 12-TET.
+        a.dispatch(a.pygame.event.Event(a.pygame.WINDOWFOCUSLOST))
+        assert a.router.held == set()
+        ev2 = a.router.press(67, Source.KEYBOARD)
+        assert ev2.freq == pytest.approx(midi_to_freq(60) * 3 / 2)
+    finally:
+        a.close()
+
+
 def test_app_import_is_pygame_and_sounddevice_free():
     # Importing the app module must not eagerly import pygame or sounddevice (both are
     # imported lazily inside methods). Checked in a clean subprocess.

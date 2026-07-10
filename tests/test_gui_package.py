@@ -29,6 +29,7 @@ LAZY_MODULES = [
     "pypiano_2607",
     "pypiano_2607.router",
     "pypiano_2607.mouse",
+    "pypiano_2607.tuning",
     "pypiano_2607.app",
     "pypiano_2607.gui",
     "pypiano_2607.gui.keyboard",

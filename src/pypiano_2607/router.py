@@ -7,10 +7,11 @@ a semantic, sounding event.
 
 ``sounder_id = the note's pitch slot`` (the MIDI number, for now): keyboard-C4 and
 mouse-C4 reconcile to ONE sounding object, so overlapping presses collapse to exactly
-one note-on and one note-off. Because the router also computes ``freq =
-midi_to_freq(midi)`` at emit time, it is the library's **pitch->Hz resolution point**
--- the synth downstream never converts MIDI (a cents/JI slot can live here later,
-upstream of the unchanged synth).
+one note-on and one note-off. Because the router also computes ``freq = tuning(midi)``
+at emit time (``tuning`` defaults to 12-TET ``midi_to_freq``; pass a Just-Intonation
+tuning from ``tuning.py`` for JI), it is the library's **pitch->Hz resolution point** --
+the synth downstream never converts MIDI, and an alternate tuning slots in here, upstream
+of the unchanged synth.
 
 pygame-free by construction: this module imports only from the package + stdlib, so
 importing it never pulls in pygame.
@@ -30,13 +31,15 @@ class InputRouter:
 
     ``press()`` emits a note-on only on the 0->1 transition; ``release()`` emits a
     note-off only on the 1->0 transition; anything else returns None. On the mint
-    (0->1), ``sounder_id = midi`` (the pitch slot) and ``freq = midi_to_freq(midi)``;
+    (0->1), ``sounder_id = midi`` (the pitch slot) and ``freq = tuning(midi)`` (12-TET
+    by default; pass a Just-Intonation ``tuning`` from ``tuning.just_tuning`` for JI);
     on release, ``freq`` is None. Keyboard + mouse on the same note therefore
     reconcile to ONE sounding object -- the router is the pitch->Hz resolution point.
     """
 
-    def __init__(self):
+    def __init__(self, tuning=midi_to_freq):
         self._holders: dict[int, set[Source]] = {}   # midi -> sources holding it (never empty)
+        self._tuning = tuning                        # midi -> Hz; default 12-TET (see tuning.py for JI)
 
     @property
     def held(self) -> set[int]:
@@ -49,7 +52,7 @@ class InputRouter:
         holders = self._holders.get(midi)
         if holders is None:
             self._holders[midi] = {source}
-            return NoteEvent(NoteKind.ON, midi, midi_to_freq(midi), source, time.perf_counter())
+            return NoteEvent(NoteKind.ON, midi, self._tuning(midi), source, time.perf_counter())
         holders.add(source)          # already sounding -> reconciled, no event
         return None
 

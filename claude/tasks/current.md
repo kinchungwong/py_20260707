@@ -64,8 +64,22 @@
           guard extended to also cover `app`/`mouse` and to forbid eager `sounddevice`.
     - [x] Topology A; `latency='low'`; focus-loss ⇒ all-notes-off, no `set_grab`; pygame +
           sounddevice stay lazy (import guard); increment-1/2 logic files + spikes frozen (14/14).
-    - **Live ear-test through a real device still open** — the human A/B
-      (`.venv/bin/python examples/play_app.py [--voice sine]`); DSP unchanged so low risk.
+    - [x] **Live ear-test through a real device — DONE** (human-tested 2026-07-10 via
+      `examples/play_app.py`).
+- [x] **Increment 4 — Just Intonation, as an option** (**DONE 2026-07-10**). Added
+      `tuning.py` (`just_tuning(tonic)` = 5-limit JI closure `midi→Hz`; `tonic_to_midi`
+      note-name parser; `JI_5LIMIT_RATIOS`). `InputRouter` gained a `tuning=midi_to_freq`
+      param (12-TET default, backward-compatible); `PianoApp(tuning=...)` preserves it
+      across the focus-loss router reset; CLI `--tuning 12tet|ji` + `--tonic` in
+      `examples/play_app.py` (`--tonic` takes `#`, shell-safe `s` (`Fs`), or flat (`Gb`)
+      spellings — `#` works unquoted but is a shell comment char). Scope: **JI only** — non-12-EDO / arbitrary-ratio microtonal
+      stays a **future spike** (human decision). Plan:
+      [`../plans/library-promotion.md`](../plans/library-promotion.md) (Increment 4).
+    - [x] 137 pytest green (142 incl. slow+perf); new `test_tuning.py` (ratios, anchoring,
+          pure octaves, below-tonic wrap, tonic-octave-cancels, name parsing) + JI coverage
+          in `test_router.py`/`test_app.py`; `tuning` in the pygame-lazy guard; spikes frozen (14/14).
+    - [x] JI math independently re-verified (5-limit table + cents, anchoring, non-C tonic,
+          backward-compat of the 12-TET default).
 - [x] Swap `PianoVoice` into `playable_instrument` as the **default** voice, with
       `--voice piano|sine` to A/B against the plain sine. → `../spikes/playable_instrument.py`
       (`voice_factory` wired to the `--voice` choice; both paths pass `--selftest`).

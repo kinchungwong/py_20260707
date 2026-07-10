@@ -131,3 +131,19 @@ def test_router_import_is_pygame_free():
         capture_output=True, text=True, env=env,
     )
     assert r.returncode == 0, r.stderr
+
+
+# --- pluggable tuning: 12-TET default, Just Intonation optional ----------------
+
+def test_default_tuning_is_12tet():
+    r = InputRouter()
+    ev = r.press(67, Source.KEYBOARD)                     # G4
+    assert ev.freq == pytest.approx(midi_to_freq(67))     # equal temperament by default
+
+
+def test_router_uses_injected_tuning():
+    from pypiano_2607.tuning import just_tuning
+    r = InputRouter(tuning=just_tuning(60))               # 5-limit JI, tonic C4
+    ev = r.press(67, Source.KEYBOARD)                     # G4
+    assert ev.freq == pytest.approx(midi_to_freq(60) * 3 / 2)   # just fifth, minted here
+    assert ev.freq != pytest.approx(midi_to_freq(67))     # ...not the 12-TET fifth

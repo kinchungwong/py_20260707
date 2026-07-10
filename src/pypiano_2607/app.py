@@ -24,6 +24,7 @@ from .events import NoteEvent, NoteKind, Source
 from .queue import EventQueue
 from .router import InputRouter
 from .mouse import MouseGlissando
+from .pitch import midi_to_freq
 from .config import SR
 from .audio import PolySynth, PianoVoice, SineVoice
 from .gui import (
@@ -39,10 +40,12 @@ class PianoApp:
     ``run()`` to open the audio stream and enter the event loop -- or drive
     ``dispatch()`` directly (the tests do this headless). ``voice`` selects the
     timbre: ``"piano"`` (rich inharmonic ``PianoVoice``, default) or ``"sine"`` (plain
-    ``SineVoice``). Call ``close()`` when done to release the window.
+    ``SineVoice``). ``tuning`` selects the temperament: ``None`` => 12-TET, or pass a
+    ``midi -> Hz`` callable (e.g. ``tuning.just_tuning(tonic)`` for Just Intonation).
+    Call ``close()`` when done to release the window.
     """
 
-    def __init__(self, *, voice: str = "piano"):
+    def __init__(self, *, voice: str = "piano", tuning=None):
         import pygame                    # lazy: importing this module stays headless
         self.pygame = pygame
         pygame.init()
@@ -53,7 +56,8 @@ class PianoApp:
         offset_keys(self.wk + self.bk, MARGIN, MARGIN)
         self.key_to_midi = key_to_midi(pygame)
 
-        self.router = InputRouter()
+        self._tuning = tuning or midi_to_freq          # midi -> Hz; None => 12-TET
+        self.router = InputRouter(tuning=self._tuning)
         self.queue = EventQueue()
         factory = PianoVoice if voice == "piano" else SineVoice
         self.synth = PolySynth(self.queue, voice_factory=factory)
@@ -100,7 +104,7 @@ class PianoApp:
         for midi in list(self.router.held):
             self.queue.push(NoteEvent(NoteKind.OFF, midi, None, Source.KEYBOARD,
                                       time.perf_counter()))
-        self.router = InputRouter()
+        self.router = InputRouter(tuning=self._tuning)   # keep the temperament across the reset
         self.glissando = MouseGlissando()
         render_full(self.screen, self.wk, self.bk, set())
         self.pygame.display.flip()

@@ -10,6 +10,7 @@ from .pitch import midi_to_freq, cents_to_hz
 from .events import NoteEvent, NoteKind, Source
 from .queue import EventQueue
 from .audio import Envelope, EnvStage, Voice, SineVoice, PianoVoice, PolySynth
+from .tuning import just_tuning, tonic_to_midi
 from .router import InputRouter
 from .mouse import MouseGlissando
 from .app import PianoApp
@@ -27,6 +28,8 @@ __all__ = [
     "SineVoice",
     "PianoVoice",
     "PolySynth",
+    "just_tuning",
+    "tonic_to_midi",
     "InputRouter",
     "MouseGlissando",
     "PianoApp",

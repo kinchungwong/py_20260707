@@ -8,8 +8,11 @@ QWERTY home row = white keys, the row above = black keys; click/drag the mouse t
 Esc or closing the window quits.
 
 Run (from the repo root):
-    .venv/bin/python examples/play_app.py                 # piano voice (default)
+    .venv/bin/python examples/play_app.py                 # piano voice, 12-TET (default)
     .venv/bin/python examples/play_app.py --voice sine    # plain sine voice
+    .venv/bin/python examples/play_app.py --tuning ji     # 5-limit Just Intonation (tonic C)
+    .venv/bin/python examples/play_app.py --tuning ji --tonic A    # ... in the key of A
+    .venv/bin/python examples/play_app.py --tuning ji --tonic Fs   # ... in F# (use 'Fs' or 'Gb'; '#' is a shell comment char)
     .venv/bin/python examples/play_app.py --selftest      # headless: drive the chain + assert, no device
 
 ``--selftest`` opens NO window or device (it sets the SDL dummy drivers, drives the
@@ -31,7 +34,7 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 
-def _selftest(voice: str) -> None:
+def _selftest(voice: str, tuning, label: str) -> None:
     """Headless: drive the whole GUI->audio chain with scripted PyGame events and a
     hand-driven callback (no window, no device), asserting it sounds + reconciles --
     the acceptance behaviors the frozen playable_instrument spike proved."""
@@ -43,7 +46,7 @@ def _selftest(voice: str) -> None:
     from pypiano_2607.app import PianoApp
     from pypiano_2607.config import BLOCK_FRAMES
 
-    app = PianoApp(voice=voice)
+    app = PianoApp(voice=voice, tuning=tuning)
     try:
         pygame = app.pygame
         frames = BLOCK_FRAMES
@@ -94,18 +97,19 @@ def _selftest(voice: str) -> None:
         drive(40)
         assert app.synth.active_count() == 0, "focus-loss did not release the held note"
 
-        print(f"selftest OK ({voice}): kbd C4 + mouse G4 -> 2 voices (peak {peak:.3f}); "
-              "released -> 0; focus-loss all-notes-off works. No device opened.")
+        print(f"selftest OK ({voice}, {label}): kbd C4 + mouse G4 -> 2 voices "
+              f"(peak {peak:.3f}); released -> 0; focus-loss all-notes-off works. "
+              "No device opened.")
     finally:
         app.close()
 
 
-def _play(voice: str) -> None:
+def _play(voice: str, tuning, label: str) -> None:
     from pypiano_2607.app import PianoApp
 
-    print(f"playable ({voice} voice)! home row = white keys, the row above = black keys; "
-          "click/drag the mouse too. Esc to quit.")
-    app = PianoApp(voice=voice)
+    print(f"playable ({voice} voice, {label})! home row = white keys, the row above = "
+          "black keys; click/drag the mouse too. Esc to quit.")
+    app = PianoApp(voice=voice, tuning=tuning)
     try:
         app.run()
     finally:
@@ -113,17 +117,36 @@ def _play(voice: str) -> None:
 
 
 def main() -> None:
+    from pypiano_2607.tuning import just_tuning, tonic_to_midi
+
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--voice", choices=("piano", "sine"), default="piano",
                     help="timbre (default: piano)")
+    ap.add_argument("--tuning", choices=("12tet", "ji"), default="12tet",
+                    help="temperament: 12tet (equal, default) or ji (5-limit just intonation)")
+    ap.add_argument("--tonic", default="C",
+                    help="JI tonic/key: C (default), A, Gb, Fs, F#, ... -- sharp is '#' or "
+                         "'s', flat is 'b'. Prefer 's' or flats: '#' is a shell comment "
+                         "char (works unquoted but breaks in Makefiles). Only with --tuning ji.")
     ap.add_argument("--selftest", action="store_true",
                     help="headless: drive the chain + assert, open no device/window")
     args = ap.parse_args()
-    if args.selftest:
-        _selftest(args.voice)
+
+    if args.tuning == "ji":
+        try:
+            tuning = just_tuning(tonic_to_midi(args.tonic))
+        except ValueError as e:
+            ap.error(str(e))                       # clean "usage: ... error: ..." + exit(2)
+        label = f"ji/{args.tonic}"
     else:
-        _play(args.voice)
+        tuning = None
+        label = "12-TET"
+
+    if args.selftest:
+        _selftest(args.voice, tuning, label)
+    else:
+        _play(args.voice, tuning, label)
 
 
 if __name__ == "__main__":
