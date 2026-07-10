@@ -32,7 +32,7 @@ What you'll hear
 2. The five qualities in turn: major, minor, augmented, diminished, neutral.
 
 Reuses the piano synth from the first spike (see
-`../memory/piano-note-synthesis-recipe.md`). Plays through sounddevice AND writes
+`../memory/acoustics/piano-note-synthesis-recipe.md`). Plays through sounddevice AND writes
 one .wav per quality plus the full sequence.
 
 Finding

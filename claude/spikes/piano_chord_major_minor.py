@@ -36,7 +36,7 @@ Finding
       so normalize the *final* mix rather than trusting per-note headroom.
     * 16 partials with B=4e-4 stays under Nyquist for octave-4 notes; the
       ``f_k >= sr/2`` guard is what stops higher partials from aliasing.
-- Distilled the working recipe into claude/memory/piano-note-synthesis-recipe.md.
+- Distilled the working recipe into claude/memory/acoustics/piano-note-synthesis-recipe.md.
 
 Run
 ---

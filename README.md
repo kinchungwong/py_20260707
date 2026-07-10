@@ -37,12 +37,18 @@ long-lived intent down to short-lived work — each folder has its own `README.m
   kept explicit so they're never relitigated or quietly reintroduced.
 - [`claude/plans/`](claude/plans/README.md) — concrete **implementation plans** for
   specific features or milestones; the bridge from vision to tasks.
+- [`claude/speculations/`](claude/speculations/README.md) — **architectural speculations**:
+  directions we've considered but not committed to, parked with a revisit trigger so
+  we don't re-derive or relitigate them later.
 - [`claude/spikes/`](claude/spikes/README.md) — one-off, throwaway **experiments** to
   verify how something works or sketch a design before committing to it.
 - [`claude/tasks/`](claude/tasks/README.md) — active, granular, **checkable work items**
   that a plan decomposes into. Kept current and pruned.
 - [`claude/memory/`](claude/memory/README.md) — cumulative **facts and decisions**
   discovered along the way: rationale, gotchas, conventions. Grows, rarely deleted.
+- [`claude/retrospectives/`](claude/retrospectives/README.md) — **session retrospectives**:
+  a dated entry per working session — what changed, what was decided, and where the
+  next session should pick up.
 
 This is separate from `.claude/` (the Claude Code harness config) and from Claude's
 own private memory store.

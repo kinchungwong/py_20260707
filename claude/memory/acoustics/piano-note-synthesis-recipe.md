@@ -36,4 +36,5 @@ Per note, sum `k = 1..N` partials of `sin`, then apply an amplitude envelope:
 - `sounddevice` 0.5.5, `numpy` 2.5.1, Python 3.13; a live `default`/`pipewire`
   ALSA output device is present. Playback: `sd.play(mono_float, SR); sd.wait()`.
 
-See [[piano-note-synthesis-recipe]] source spike for the exact, runnable code.
+See the source spike `../../spikes/piano_chord_major_minor.py` for the exact,
+runnable code.

@@ -17,6 +17,8 @@ else in `claude/` should trace back to.
 - Concrete implementation steps → `../plans/`
 - Granular, checkable work items → `../tasks/`
 - Discovered facts, gotchas, and decisions-in-passing → `../memory/`
+- Absolute prohibitions / off-limits ("never use X") → `../policy/`. Vision holds
+  shaping constraints and direction; a flat, safety-driven ban is a policy.
 
 ## How to use
 
