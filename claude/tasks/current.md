@@ -7,9 +7,30 @@
 
 ## Active
 
-*(Nothing active yet.)* Next up is the first **focused spike**, staged-chord-entry
-([`../../focused-spikes/`](../../focused-spikes/README.md)); its tasks land here — or inside
-the spike, per the tasks-location convention we settle — once the minimal slice is pinned.
+**Focused spike — staged-chord-entry** (scaffolded 2026-07-10):
+[`../../focused-spikes/`](../../focused-spikes/README.md) → `staged-chord-entry/`. The first
+focused spike; asks whether staged chord entry plays like *playing* or like *programming*.
+Runnable, with a headless `--selftest`; granular checklist + the finding live in the spike's
+own `README.md`/`status_active.md` (the hybrid tasks-location convention).
+
+Minimal slice — **now pinned**:
+- **Scope:** feel-test slice, the sketch's shape only; ONE preset slot (`Z`); keyboard-first
+  (mouse drives only the HUD buttons).
+- **Commit gesture:** persistent live⇄staged toggle + explicit Play-chord (space). No
+  quasimode / timeout comparison this round.
+- **Audition:** lightweight `pygame.mixer` one-shot sine behind `_audition()` — a deliberate,
+  documented second acoustic authority; consolidates into `PolySynth` at graduation.
+- **Commit path:** staged notes fire as fire-and-forget note-ons on the `EventQueue`
+  (`sounder_id = midi`, bypass the router, no note-off) → ring out on natural decay;
+  focus-loss silences them.
+- **Loop:** spike-owned `clock.tick(60)`; composes the library, no edits to `src/`.
+
+Friction surfaced (and handled): the library isn't pip-installed (src-layout), so `src/` must
+go on `sys.path` first. That shim now lives in `focused-spikes/shared/bootstrap.py`
+(`ensure_library_on_path()`) — the trunk's first occupant, shared infrastructure every active
+spike reuses; each spike keeps only a tiny move-safe walk-up-to-`shared/` preamble. A
+relocatable stand-in for the env-resolution the `focused-spikes/` READMEs had assumed (their
+dependency bullets are updated to match).
 
 ## Backlog / deferred
 

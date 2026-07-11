@@ -35,8 +35,12 @@ It is also what makes a spike **portable** — the same property a pedagogical p
 
 What a spike may and may not depend on:
 
-- **The promoted library — yes.** `import pypiano_2607` is fine: it resolves via the
-  environment regardless of where the spike sits, so it survives a move.
+- **The promoted library — yes.** `import pypiano_2607` is fine, and survives a move.
+  *(Reality check from the first spike: the library is a **src-layout package not installed**
+  into the `.venv` — venv policy is no-pip — so `src/` must go on `sys.path` first. That shim
+  lives once in [`shared/bootstrap.py`](shared/README.md) (`ensure_library_on_path()`); a
+  spike just walks **up** to the `shared/` trunk and calls it. It resolves from anywhere
+  **inside** the repo; extraction **out** of the repo vendors instead, per the archived tier.)*
 - **The standard library and third-party packages — yes.** Depending on the `.venv`
   environment is expected; that is not what "self-contained" forbids.
 - **Another spike — no, not by relative import.** A relative peer-import (`../other-spike/…`)
@@ -99,5 +103,9 @@ focused-spikes/
 
 ## Index
 
-*(No focused spikes yet.)* Add one line per spike as it lands — name, the question it
-targets, and its status — so this index stays the map of the tree.
+Add one line per spike as it lands — name, the question it targets, and its status — so
+this index stays the map of the tree.
+
+- **`staged-chord-entry/`** — does staged chord entry play like *playing* or like
+  *programming*? A persistent-mode-toggle + explicit-commit prototype wired over the real
+  `pypiano_2607` synth, with a lightweight `pygame.mixer` audition. Status: **active**.

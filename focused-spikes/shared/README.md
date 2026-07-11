@@ -19,6 +19,8 @@ trunk, the same shape as depending on the promoted library `pypiano_2607`.
 
 - A helper, fixture, test harness, or reference datum used by **two or more** focused spikes.
 - Code general enough that copying it into each spike would be worse than sharing it.
+- The tier's shared **infrastructure** — e.g. `bootstrap.py`, the library-path shim every
+  active spike needs (see Status for why this one lands before a "second leaf" exists).
 
 ## What does NOT belong here
 
@@ -40,6 +42,14 @@ trunk, the same shape as depending on the promoted library `pypiano_2607`.
 
 ## Status
 
-Empty by design. Nothing is shared until a **second** spike actually needs it — don't build
-the trunk before there are two leaves. This README exists now as the policy anchor and a
-stable link target, not because there is code to document yet.
+First occupant: **`bootstrap.py`** — `ensure_library_on_path()`, the library-path shim every
+active spike needs (it puts the src-layout `pypiano_2607` on `sys.path`, since the venv has
+no pip install of it). This is a deliberate exception to the "wait for the second leaf" rule:
+it is not a *speculative* domain helper hoisted early, it is the tier's **structural import
+mechanism** — every active spike needs it by construction, since "active spikes may import
+`pypiano_2607`" has to bottom out somewhere. Ordinary domain helpers still wait for a genuine
+second user before landing here.
+
+`bootstrap.py` self-locates (it walks up from its own fixed home to the repo root), so a
+spike only needs a tiny move-safe preamble to reach `shared/` and call it — see any spike's
+`main.py`.
