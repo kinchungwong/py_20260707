@@ -56,6 +56,9 @@ long-lived intent down to short-lived work — each folder has its own `README.m
   future directions, captured by date before they crystallize into vision, plans, or
   spikes; the forward-looking counterpart to retrospectives. *(New — conventions still
   settling.)*
+- [`claude/ui-designs/`](claude/ui-designs/README.md) — concrete, captured **interaction
+  and interface designs**: detailed enough to build from later, but not yet a committed
+  plan. Sits between a discussion and a plan. *(New — conventions still settling.)*
 
 This is separate from `.claude/` (the Claude Code harness config) and from Claude's
 own private memory store.

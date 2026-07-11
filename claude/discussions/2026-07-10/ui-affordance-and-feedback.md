@@ -62,6 +62,24 @@ gesture is ever prototyped, this topic is what makes it survivable for a newbie.
   making the app actually low-friction and forgiving — you can't correct a mistake you
   didn't know you'd made, and you can't use an affordance you can't see.
 
+## A live sketch (2026-07-10, in-chat only — not persisted as a file)
+
+Tried a clickable inline mockup combining this topic with archetype 5 from
+`keyboard-and-input-surface.md`: a tuning badge, a live/staged mode toggle
+(color-coded, since a persistent mode needs an unmissable signal), on-screen keys
+labeled physical-key-over-note (the discoverability half), and a pending-chord tray
+where staged notes can be removed individually or cleared entirely before an explicit
+commit (the low-friction-correction half of `audience-and-accessibility.md`). Confirmed
+by interacting with it: the mode-color-change genuinely helps track state, and an empty
+tray needs an explicit "nothing staged yet" placeholder or it reads as broken rather
+than idle.
+
+**Graduated to a captured design (2026-07-10):** after several more rounds (save-as-preset,
+a unified shift-click "forget" gesture, relabeled controls), the full spec — states,
+every control and gesture, reasoning, and the reference source — now lives in
+[`../../ui-designs/staged-chord-entry-hud.md`](../../ui-designs/staged-chord-entry-hud.md),
+no longer in-chat-only.
+
 ## Open questions
 
 - How much of this is **general-purpose chrome** (works for any mode) versus

@@ -24,6 +24,17 @@ substitute. A newbie who learns "quasimode" from us has learned something true a
 transferable; a newbie who learns our invented substitute has learned nothing outside
 this project.
 
+## A same-project reuse, not just a music-world one (2026-07-10)
+
+The staged-entry sketch's "release" button (see `keyboard-and-input-surface.md`) reuses
+a term that isn't just generic musician vocabulary — it's already a first-class stage
+name in this project's own synth core: the envelope state machine is literally
+`IDLE → ATTACK → SUSTAIN → RELEASE → IDLE`
+(`../../memory/acoustics/realtime-gate-envelope.md`). Reusing "release" for "let go of
+the pending/staged notes" costs nothing new to learn for anyone who later reads the
+DSP code — the policy pays off *within* the project, not only against the outside
+world.
+
 ## Where this already applies, and where it's still open
 
 - **Keyboard/input** — done in practice already; the standing vocabulary list in

@@ -128,6 +128,39 @@ presets** — build a chord slowly once via staging, bind the result to a key fo
 one-press recall after. Mirrors how arranger keyboards let users program custom chord
 buttons: build-once, trigger-fast.
 
+**Sketch confirms the loop closes (2026-07-10, in-chat only):** extended the modality
+HUD mockup (see `ui-affordance-and-feedback.md`) with a `Save` action next to
+`Commit chord` / `Clear`, plus four chord-preset slots. Saving a staged chord binds it
+to the next open slot; clicking a bound slot afterward — in either mode — fires every
+member key together. Also added: **plain click always stages** a key (idempotent, never
+removes), **shift-click toggles** it (adds if absent, removes if present) — a third,
+in-place way to selectively clear a staged note, alongside the tray chip's `×` and the
+`Clear` button.
+
+**Unified into one gesture (2026-07-10):** shift-click now means **forget**, applied to
+two different targets with the same rule — shift-click a staged key to un-stage it;
+shift-click a bound preset slot to unbind it. A preset slot is indexed by position, not
+by list order, so forgetting one leaves the others exactly where they are (no reflow);
+`Save` already picks the first empty slot, so a forgotten slot is simply available
+again on the next save. One gesture, one word, two places it applies — worth keeping
+"forget" as the term if this survives past the sketch stage.
+
+**Graduated to a captured design (2026-07-10):** the full state model, control table,
+and reference source now live in
+[`../../ui-designs/staged-chord-entry-hud.md`](../../ui-designs/staged-chord-entry-hud.md)
+— including an honest note that this sketch implicitly settled on a persistent-mode +
+explicit-commit combination (candidates 2+4 below), never trying the quasimode
+(candidate 1) or timeout (candidate 3).
+
+**Buttons relabeled (2026-07-10):** `Commit chord` → **Play chord**; `Save` →
+**Save chord**, now previewing its target slot live in its own label (`Save chord → Z`)
+and softening to a muted `Presets full` — never truly `disabled` — when no slot is free,
+kept clickable so the reactive hint still fires; `Clear` → **Release** (releases only
+the pending/staged notes). Added a new, always-visible **Reset** (not staged-mode-only,
+since it also affects presets) that releases the pending chord *and* forgets every
+saved preset in one action. `Release` reuses a term the synth core already has —
+see `terminology-policy.md`.
+
 **Open sub-axis:** feedback while staging — audition each note as it's added (typing-
 echo feel) vs. silent buffer until commit (cleaner "chord" semantics, more surprising).
 
