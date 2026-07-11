@@ -161,8 +161,12 @@ since it also affects presets) that releases the pending chord *and* forgets eve
 saved preset in one action. `Release` reuses a term the synth core already has —
 see `terminology-policy.md`.
 
-**Open sub-axis:** feedback while staging — audition each note as it's added (typing-
-echo feel) vs. silent buffer until commit (cleaner "chord" semantics, more surprising).
+**Open sub-axis, resolved (2026-07-10):** feedback while staging — audition each note
+as it's added (typing-echo feel) vs. silent buffer until commit (cleaner "chord"
+semantics, more surprising). Resolved in favor of **audition**: a short beep (~0.1-0.2s)
+on stage, reminding the player what that key sounds like. Also settled: **space bar is
+a keybinding for `Play chord`**, not a new mode — see
+`../../ui-designs/staged-chord-entry-hud.md`.
 
 **What a first spike should actually test:** the mechanics above are all cheap to build;
 the real unknown is **feel** — does any commit gesture play naturally, or does staged

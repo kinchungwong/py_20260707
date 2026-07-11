@@ -46,15 +46,21 @@ same look.
 
 ## Controls and gestures
 
+Every "click" below is shorthand for two physical actions this design treats
+identically: clicking the on-screen key with a mouse, or typing the corresponding
+physical key on a real keyboard — the sketch's on-screen buttons stand in for the real
+app's PyGame key events.
+
 | Control | Action | Why |
 |---|---|---|
 | Tuning badge | Click toggles the displayed value | Cosmetic placeholder for a real tuning indicator |
 | Mode button | Click flips `live ⇄ staged`, clearing `staged` on either transition | Color-coded (accent when staged) — the mode-error mitigation named in `ui-affordance-and-feedback.md` |
 | A key, live mode | Click gives a brief flash, simulating a played note | |
-| A key, staged mode, plain click | Always adds the note to `staged` if absent; no-op if already staged | "Normal click always stages," per the original request |
-| A key, staged mode, shift-click | Toggles: adds if absent, removes if present | The "forget" gesture, target 1 of 2 |
+| A key, staged mode, plain click or type | Always adds the note to `staged` if absent (no-op if already staged), and plays a short **audition** beep (~0.1–0.2s) reminding the player what that key sounds like | Resolves the "feedback while staging" question left open below — audition wins over a silent buffer |
+| A key, staged mode, shift-click or shift+type | Toggles: adds if absent, removes if present | The "forget" gesture, target 1 of 2 |
 | Tray chip `×` | Removes that one staged note | A third, tray-based way to remove a single staged note |
 | `Play chord` | Fires all staged notes together (visual only), then clears `staged` | The explicit-commit gesture |
+| Space bar, staged mode | Same as clicking `Play chord`: fires all staged notes, then clears `staged` | Reaches for the near-universal space-bar-as-transport convention (DAW/media play/stop) — same reuse instinct as `Release`. What (if anything) space bar does outside staged mode is explicitly unclaimed — see open questions |
 | `Save chord` | Binds `staged` to the next empty preset slot, then clears `staged`. Label previews the target live (`Save chord → Z`); softens to a muted `Presets full` — never `disabled` — when no slot is free | Staged entry as an authoring path for chord-mode presets; stays clickable when "full" so the reactive hint still fires |
 | `Release` | Clears `staged` without playing | Named for the synth's own envelope `RELEASE` stage — see `../discussions/2026-07-10/terminology-policy.md` |
 | Preset slot (`Z`/`X`/`C`/`V`), plain click | If bound: fires every member key together, in either mode. If empty: a neutral no-op flash | The "one key, many notes" chord-mode idea |
@@ -85,6 +91,9 @@ while staged (both from `ui-affordance-and-feedback.md`), not an accident.
   to the persistent-toggle-plus-explicit-commit shape used here?
 - Should `Save chord`'s slot targeting ever be user-chosen, rather than always
   next-available?
+- What, if anything, should space bar do outside staged mode? Deliberately left
+  unclaimed (2026-07-10) rather than designed now — a candidate for a future
+  sustain/hold function, but not decided.
 - None of this is wired to real audio, tuning, or `InputRouter`. A first real spike
   (see "Where new exploratory code goes" in `keyboard-and-input-surface.md`) would need
   to decide how much of this state model maps onto real input events versus being
