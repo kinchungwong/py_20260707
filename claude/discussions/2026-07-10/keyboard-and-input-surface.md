@@ -95,7 +95,7 @@ file list — new exploratory code (keyboard-interaction prototypes, etc.) needs
 
 **Decided (2026-07-10):** don't pre-reserve a `spikes2`-style directory now. When a new
 exploratory arc actually starts, create **one sibling directory named for that arc's
-topic** (e.g. `claude/spikes-keyboard-input/`), matching how individual spike files are
+topic** (e.g., under `claude/` — something like `spikes-keyboard-input/`), matching how individual spike files are
 already named for the question they ask rather than a sequence number. Each future arc
 (keyboard input, microtonality, maybe a pedagogy reconstruction) gets its own directory
 when *it* begins — not all reserved up front. The convention itself gets written down in
@@ -133,10 +133,9 @@ echo feel) vs. silent buffer until commit (cleaner "chord" semantics, more surpr
 
 **What a first spike should actually test:** the mechanics above are all cheap to build;
 the real unknown is **feel** — does any commit gesture play naturally, or does staged
-entry always feel like "programming" rather than "playing"? A first
-`claude/spikes-keyboard-input/` experiment (name TBD when started, see "Where new
-exploratory code goes" above) should be scoped around *that* question, not around
-picking one gesture in the abstract.
+entry always feel like "programming" rather than "playing"? A first exploratory-spike
+experiment (name TBD when started, see "Where new exploratory code goes" above) should
+be scoped around *that* question, not around picking one gesture in the abstract.
 
 ## Open questions
 

@@ -38,6 +38,25 @@ Each has its own note with the current state of knowledge and the open questions
    - Reignite: What's the general abstraction for "a thing you can play" — a discrete
      tone set, a continuous pitch field, or both? What's the *first* spike?
 
+## Cross-cutting guidance (added mid-session, 2026-07-10)
+
+Not a fourth direction — **guidance that shapes all three topics above**, prompted by
+stepping back to ask *who is this for*. Three short notes, meant to be read alongside
+whichever topic is active:
+
+- **Audience.** The audience for everything here is **newbies**, in two overlapping
+  senses — UI users with little-to-no instrument-playing background, and pedagogical
+  users with little-to-no programming/theory/acoustics background. No assumed skill
+  level, in either direction. → `audience-and-accessibility.md`
+- **Terminology.** Reuse real, existing terminology rather than inventing a parallel
+  vocabulary — but always explain it for the newbie audience rather than assuming it's
+  known. (This is what the vocabulary section in `keyboard-and-input-surface.md` was
+  already doing, now named as policy.) → `terminology-policy.md`
+- **UI affordance.** The display needs to grow to give newbies clues about what's
+  possible, and unmissable feedback about what mode is currently active — "a bit of
+  WYSIWYG." Directly answers the mode-error risk raised under archetype 5 in
+  `keyboard-and-input-surface.md`. → `ui-affordance-and-feedback.md`
+
 ## Cross-links worth not losing
 
 - **Keyboard ⇄ microtonality.** A non-12 layout still has to sit on *some* input
@@ -47,6 +66,8 @@ Each has its own note with the current state of knowledge and the open questions
 - **Pedagogy ⇄ everything.** The teaching product is a lens on the whole project;
   alternative input and microtonality are exactly the kind of "next step" a student
   guide could build toward.
+- **Audience / terminology / UI-affordance ⇄ everything.** These three aren't a fourth
+  topic — they're a lens applied to all three above; see "Cross-cutting guidance."
 
 ## Parking lot (things that surface mid-talk)
 
