@@ -175,6 +175,11 @@ spikes on it rather than re-drawing the keyboard.
 
 ## Notes
 
+- **Spikes have moved (2026-07-10):** new exploratory spikes now live at the project-level
+  [`focused-spikes/`](../../focused-spikes/README.md) — self-contained, relocatable, with
+  in-folder `status_active.md`/`status_archived.md` markers. The `../spikes/` references
+  throughout this file point to the now-**legacy** `claude/spikes/`: frozen, pre-milestone-1,
+  kept as read-only reference.
 - Blocked/open: none yet. See `../vision/` for the latency and tuning constraints
   these tasks must respect.
 - Architectural forks that aren't committed live in `../speculations/` (currently:

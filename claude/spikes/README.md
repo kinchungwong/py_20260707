@@ -1,4 +1,12 @@
-# Spikes
+# Spikes — legacy (pre-milestone-1), frozen
+
+> **Legacy · frozen — read-only reference.** These are the **pre-milestone-1** spikes:
+> throwaway experiments from before the library-promotion arc shipped. Their code is
+> **frozen** and kept only as a historical record. **Do not add new spikes here, and do not
+> modify the experiments.** New exploratory work lives in the project-level
+> [`focused-spikes/`](../../focused-spikes/README.md) — self-contained, relocatable spikes
+> under their own policy. Everything below is the original pre-freeze intent, preserved for
+> the record; it no longer governs current work.
 
 One-off, throwaway **experiments** to answer a question before committing to it.
 A spike exists to *learn*, not to ship — its value is the understanding it produces,

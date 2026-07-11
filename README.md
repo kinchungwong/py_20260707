@@ -43,8 +43,10 @@ long-lived intent down to short-lived work — each folder has its own `README.m
 - [`claude/speculations/`](claude/speculations/README.md) — **architectural speculations**:
   directions we've considered but not committed to, parked with a revisit trigger so
   we don't re-derive or relitigate them later.
-- [`claude/spikes/`](claude/spikes/README.md) — one-off, throwaway **experiments** to
-  verify how something works or sketch a design before committing to it.
+- [`claude/spikes/`](claude/spikes/README.md) — **legacy (pre-milestone-1)**, one-off
+  throwaway **experiments**, now **frozen** (read-only reference). New exploratory work
+  lives in the project-level [`focused-spikes/`](focused-spikes/README.md) — a sibling of
+  `claude/`, not under it.
 - [`claude/tasks/`](claude/tasks/README.md) — active, granular, **checkable work items**
   that a plan decomposes into. Kept current and pruned.
 - [`claude/memory/`](claude/memory/README.md) — cumulative **facts and decisions**
