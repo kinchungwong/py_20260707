@@ -2,6 +2,9 @@
 
 *A discussion note: current knowledge + open questions. Not a decision, not a plan.*
 
+**Discussion status: paused (2026-07-10).** Today's session narrowed to piano UI design
+(see `discussion_facilitator.md`); this thread resumes in a future session.
+
 ## Why this project is unusual teaching material
 
 `pypiano_2607` didn't just produce an app — it produced a **legible trail of how it was

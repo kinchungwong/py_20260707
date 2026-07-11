@@ -1,6 +1,8 @@
 # Design — staged chord entry HUD
 
-**Status: Sketch** · Grew out of
+**Status: Sketch — next step is a spike, not a plan directly** (decided 2026-07-10; see
+the full pre-implementation gap list in
+[`../retrospectives/2026-07-10-e.md`](../retrospectives/2026-07-10-e.md)) · Grew out of
 [`../discussions/2026-07-10/keyboard-and-input-surface.md`](../discussions/2026-07-10/keyboard-and-input-surface.md)
 and
 [`../discussions/2026-07-10/ui-affordance-and-feedback.md`](../discussions/2026-07-10/ui-affordance-and-feedback.md)

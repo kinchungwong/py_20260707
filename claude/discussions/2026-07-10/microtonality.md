@@ -2,6 +2,11 @@
 
 *A discussion note: current knowledge + open questions. Not a decision, not a plan.*
 
+**Discussion status: paused (2026-07-10).** Today's session narrowed to piano UI design
+(see `discussion_facilitator.md`); this thread resumes in a future session. Distinct
+from the standing decision below that microtonality *itself* is deferred to a future
+spike — this is only about when we next talk about it.
+
 ## The standing intent
 
 The vision has always been that **the sound model generalizes beyond 12-TET, and even

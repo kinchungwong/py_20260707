@@ -11,6 +11,13 @@ real hardware. What comes next is **deliberately open** — see the milestone re
 `../../retrospectives/2026-07-10-d.md`. Today explores that open space; it does not
 close it.
 
+**Scope narrowed (2026-07-10, mid-session).** Topic 1 (keyboard/input) turned out to be
+where the session's energy actually was — it produced a fully iterated, captured design
+(`../../ui-designs/staged-chord-entry-hud.md`). Topics 2 and 3 (pedagogy, microtonality)
+are **paused, not abandoned** — deferred to a future discussion session so today could
+stay focused on piano UI design. Everything captured under them so far is still valid
+starting material.
+
 ## The topics on the table
 
 Each has its own note with the current state of knowledge and the open questions. They
@@ -23,20 +30,20 @@ Each has its own note with the current state of knowledge and the open questions
    - Reignite: Do we make QWERTY *playable*, or *transcend* it (keyboard as a command
      surface, pitch expression elsewhere)? What would "supercharge" even mean here?
 
-2. **Pedagogical products from the project.** Turning what we built — and *how* we
-   built it — into a step-by-step, show-by-construction guide for students to grow
-   their own project like this, in **smaller ("baby") steps** than we actually took.
-   → `pedagogical-products.md`
-   - Reignite: Is the lesson *audio programming*, or the *method* (spikes → library →
-     app, and the knowledge layers)? Who is the student?
+2. **Paused — Pedagogical products from the project.** Turning what we built — and
+   *how* we built it — into a step-by-step, show-by-construction guide for students to
+   grow their own project like this, in **smaller ("baby") steps** than we actually
+   took. → `pedagogical-products.md`
+   - Reignite (next session): Is the lesson *audio programming*, or the *method*
+     (spikes → library → app, and the knowledge layers)? Who is the student?
 
-3. **Microtonality — the deferred frontier.** Novel UI, novel interactions, and
+3. **Paused — Microtonality, the deferred frontier.** Novel UI, novel interactions, and
    library-interface changes to make room for non-12-tone instruments — even ones with
    **no discrete tones at all**. The synth core is already frequency-native; the
    12-tone assumptions live at the input/UI edge.
    → `microtonality.md`
-   - Reignite: What's the general abstraction for "a thing you can play" — a discrete
-     tone set, a continuous pitch field, or both? What's the *first* spike?
+   - Reignite (next session): What's the general abstraction for "a thing you can play"
+     — a discrete tone set, a continuous pitch field, or both? What's the *first* spike?
 
 ## Cross-cutting guidance (added mid-session, 2026-07-10)
 
@@ -73,6 +80,12 @@ whichever topic is active:
 
 - _(add as we go — ideas that deserve their own thread but shouldn't derail the current
   one)_
+
+## Session handoff
+
+Session concluded 2026-07-10 — see
+[`../../retrospectives/2026-07-10-e.md`](../../retrospectives/2026-07-10-e.md) for the
+full handoff and the pre-implementation gap list the next session starts from.
 
 ## Ground rules for today (provisional — see `../README.md`)
 
