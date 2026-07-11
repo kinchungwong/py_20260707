@@ -52,6 +52,10 @@ long-lived intent down to short-lived work — each folder has its own `README.m
 - [`claude/retrospectives/`](claude/retrospectives/README.md) — **session retrospectives**:
   a dated entry per working session — what changed, what was decided, and where the
   next session should pick up.
+- [`claude/discussions/`](claude/discussions/README.md) — open-ended **discussions** of
+  future directions, captured by date before they crystallize into vision, plans, or
+  spikes; the forward-looking counterpart to retrospectives. *(New — conventions still
+  settling.)*
 
 This is separate from `.claude/` (the Claude Code harness config) and from Claude's
 own private memory store.
