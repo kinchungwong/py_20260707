@@ -24,6 +24,7 @@ TEXT_MUTED    = (150, 150, 158)
 TEXT_ON_LIGHT = (40, 40, 44)
 BTN           = (52, 52, 60)
 BTN_BORDER    = (92, 92, 104)
+WINDOW_ACCENT = (108, 132, 200)   # the input-window bar under the mapped keys
 
 
 class Hud:
@@ -68,7 +69,7 @@ class Hud:
         surf = font.render(label, True, col)
         screen.blit(surf, surf.get_rect(center=rect.center))
 
-    def draw(self, screen, *, mode, staged_names, preset_names, tuning_label, hint):
+    def draw(self, screen, *, mode, staged_names, preset_names, tuning_label, hint, window_label):
         f = self.fonts()
         pygame.draw.rect(screen, PANEL, pygame.Rect(0, 0, self.width, self.hud_h))
         pygame.draw.line(screen, BORDER, (0, self.hud_h - 1), (self.width, self.hud_h - 1))
@@ -79,6 +80,8 @@ class Hud:
 
         tsurf = f["small"].render("tuning: " + tuning_label, True, TEXT_MUTED)
         screen.blit(tsurf, tsurf.get_rect(topright=(self.width - self.margin, 22)))
+        wsurf = f["small"].render(window_label, True, TEXT_MUTED)
+        screen.blit(wsurf, wsurf.get_rect(topright=(self.width - self.margin, 48)))
 
         if staged:
             tray = "Pending:  " + ("  ·  ".join(staged_names) if staged_names
@@ -100,13 +103,23 @@ class Hud:
 
 
 def draw_keyboard(screen, white_keys, black_keys, *, held, staged, flashing,
-                  labels, key_font, name_font):
+                  labels, key_font, name_font, bound=None):
     """Paint every key coloured by state (flash > staged > live-held > base), then its
-    physical-key-over-note label. Whites first, then blacks on top (the overlap wrinkle)."""
+    physical-key-over-note label. Whites first, then blacks on top (the overlap wrinkle).
+    `bound` (the midis the computer keys currently target) draws an accent bar marking the
+    slidable input window."""
     for k in white_keys:
         _paint_key(screen, k, held, staged, flashing, labels, key_font, name_font)
     for k in black_keys:
         _paint_key(screen, k, held, staged, flashing, labels, key_font, name_font)
+    if bound:
+        rects = [k.rect for k in white_keys + black_keys if k.midi in bound]
+        if rects:
+            x0 = min(r.left for r in rects)
+            x1 = max(r.right for r in rects)
+            base = max(k.rect.bottom for k in white_keys)     # keyboard bottom edge
+            pygame.draw.rect(screen, WINDOW_ACCENT,
+                             pygame.Rect(x0, base + 6, x1 - x0, 5), border_radius=2)
 
 
 def _paint_key(screen, key, held, staged, flashing, labels, key_font, name_font):

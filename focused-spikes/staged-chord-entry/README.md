@@ -23,22 +23,29 @@ chain headlessly and asserts a committed chord actually sounds and the HUD rende
 ## Controls
 
 - **Tab** — toggle live / staged (also the Mode button).
-- Live mode: **a s d f g h j k** = white keys C4..C5, **w e t y u** = the black keys —
-  press-and-hold to play.
-- Staged mode: the same keys **stage** a note (a short sine audition fires); **Shift+key**
-  toggles a staged note off ("forget").
+- **Note keys** — home row **a s d f g h j k l ; '** = the white keys (`a`..`j` span the
+  middle octave C4..B4; `k l ; '` reach up), upper row **w e t y u o p** = the black keys
+  between them. Live mode: press-and-hold to play. Staged mode: each key **stages** a note
+  (a short sine audition fires); **Shift+key** toggles a staged note off ("forget").
+- **q** / **\** — slide the input window down / up one semitone (either mode). It re-aims
+  *future* input only; notes already held or committed keep their pitch. All three octaves
+  are drawn; the blue bar marks where your keys currently point.
 - **Space** (staged) — Play chord: fire the staged notes together, then clear.
 - **Z** — fire the saved preset (either mode); **Shift+Z** — forget it.
 - HUD buttons (mouse): **Play chord**, **Save chord -> Z**, **Release**.
-- **Esc** / close window — quit.
+- **Esc** / close window — quit. (Note: **q** shifts the window; it does **not** quit.)
 
-Keyboard-first: the mouse drives only the HUD buttons, not the piano keys (v1 scope). The
-upper octave is drawn for context but only the lower octave has key bindings.
+Keyboard-first: the mouse drives only the HUD buttons, not the piano keys (v1 scope).
 
 ## What's baked in (spike-simple — the pinned decisions)
 
 - **Feel-test slice, the sketch's shape only**: persistent live⇄staged toggle + explicit
   Play-chord commit; ONE preset slot (`Z`); no quasimode / timeout comparison this round.
+- **Input surface**: a 3-octave keyboard; the computer keys map to a slidable ~1.4-octave
+  window over it (`layout.InputWindow`), moved a semitone at a time by `q`/`\` — the slide
+  re-aims future input only, held/committed notes keep their pitch. (Added after the
+  2026-07-11 eval; the library keyboard is fixed at 2 octaves, so the geometry is rebuilt in
+  `layout.py` — `src/` stays untouched.)
 - **Audition**: a `pygame.mixer` one-shot sine behind `_audition()` (library-free) — a
   deliberate second acoustic authority. Named debt: consolidate into `PolySynth` at
   graduation (see `status_active.md`).
@@ -52,6 +59,8 @@ upper octave is drawn for context but only the lower octave has key bindings.
 - `main.py` — entry, arg parsing, `--selftest`, and a short move-safe preamble that reaches
   the `shared/` trunk for the library-path bootstrap (`shared/bootstrap.py`).
 - `staged_app.py` — state, mode-aware dispatch, the render loop, library wiring.
+- `layout.py` — the 3-octave keyboard geometry + the slidable `InputWindow` (computer-key →
+  midi mapping with the `q`/`\` shift).
 - `hud.py` — the HUD strip (pygame-drawn) + multi-state keyboard painting.
 - `audition.py` — the `pygame.mixer` one-shot audition (numpy + pygame only).
 

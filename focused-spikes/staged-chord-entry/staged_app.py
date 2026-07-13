@@ -8,6 +8,10 @@ it is a parallel shell that reuses the components.
 Design decisions baked in (all "spike-simple"; see README.md / status_active.md):
   * feel-test slice, the sketch's shape only; ONE preset slot (key Z); keyboard-first
     (mouse drives only the HUD buttons, not the piano keys).
+  * input surface: a 3-octave keyboard with the computer keys mapped to a slidable window
+    over it (layout.InputWindow); q/\\ slide it a semitone, re-aiming future input only, so a
+    held note keeps its pitch (_held_key_midi releases the pitch pressed, not the new target,
+    and refcounts by pitch so two keys landed on one note by a shift don't cut each other off).
   * live vs staged: a persistent toggle (Tab / Mode button). Staged staging is press-only
     (KEYUP ignored) -- clean because pygame doesn't auto-repeat KEYDOWN.
   * audition on stage: a pygame.mixer one-shot sine behind _audition() (library-free).
@@ -27,18 +31,15 @@ from pypiano_2607.router import InputRouter
 from pypiano_2607.audio import PolySynth, PianoVoice, SineVoice
 from pypiano_2607.pitch import midi_to_freq
 from pypiano_2607.config import SR
-from pypiano_2607.gui import (
-    build_keys, offset_keys, note_name,
-    WHITE_QWERTY, BLACK_QWERTY, key_to_midi,
-    WIDTH, HEIGHT, MARGIN,
-)
+from pypiano_2607.gui import offset_keys, note_name, MARGIN
 
 import hud
+import layout
 from audition import Audition
 
 HUD_H = 200
-WIN_W = WIDTH + 2 * MARGIN
-WIN_H = HUD_H + HEIGHT + MARGIN
+WIN_W = layout.WIDTH + 2 * MARGIN
+WIN_H = HUD_H + layout.HEIGHT + MARGIN
 FLASH_MS = 350
 
 
@@ -55,10 +56,11 @@ class StagedApp:
         self._tuning = tuning or midi_to_freq              # midi -> Hz; None => 12-TET
         self.tuning_label = tuning_label
 
-        # library components
-        self.wk, self.bk = build_keys()
+        # library components + the 3-octave keyboard (built here; the library's build_keys is
+        # fixed at two octaves -- see layout.py).
+        self.wk, self.bk = layout.build_keyboard()
         offset_keys(self.wk + self.bk, MARGIN, HUD_H)      # keyboard below the HUD strip
-        self.key_to_midi = key_to_midi(pygame)
+        self.window = layout.InputWindow()                 # computer keys -> midi, slidable
         self.router = InputRouter(tuning=self._tuning)
         self.queue = EventQueue()
         factory = PianoVoice if voice == "piano" else SineVoice
@@ -67,9 +69,10 @@ class StagedApp:
         # spike UI
         self.hud = hud.Hud(WIN_W, HUD_H, MARGIN)
         self._z_key = pygame.key.key_code("z")
-        mapped = [m for _, m in WHITE_QWERTY + BLACK_QWERTY]
-        self.audition = Audition(mapped, sr=SR)
-        self._labels = {m: (ch.upper(), note_name(m)) for ch, m in WHITE_QWERTY + BLACK_QWERTY}
+        self._shift_down_key = pygame.key.key_code("q")    # slide the input window down/up
+        self._shift_up_key = pygame.key.key_code("\\")
+        self.audition = Audition(range(layout.MIN_MIDI, layout.MAX_MIDI + 1), sr=SR)
+        self._labels = self.window.labels()                # midi -> (char, name); recomputed on shift
         self._key_font = pygame.font.Font(None, 22)
         self._name_font = pygame.font.Font(None, 18)
 
@@ -79,6 +82,7 @@ class StagedApp:
         self.preset: list[int] | None = None               # the single Z slot
         self._flash: dict[int, int] = {}                   # midi -> expiry (ticks ms)
         self._ringing: set[int] = set()                    # committed ids w/ no natural off
+        self._held_key_midi: dict[int, int] = {}           # live keycode -> midi it pressed
         self.hint = "Live mode. Tab to enter staged entry."
 
     # --- audio helpers --------------------------------------------------------
@@ -114,11 +118,21 @@ class StagedApp:
             self.queue.push(NoteEvent(NoteKind.OFF, sid, None, Source.KEYBOARD,
                                       time.perf_counter()))
         self._ringing.clear()
+        self._held_key_midi.clear()
         self.router = InputRouter(tuning=self._tuning)     # keep the temperament
         if clear_staged:
             self.staged.clear()
 
     # --- staged-entry actions -------------------------------------------------
+
+    def _shift_window(self, delta: int) -> None:
+        """Slide the input window (q/\\). Re-aims future input only; held/committed notes keep
+        their pitch (the held-key map releases the pitch actually pressed, not the new one)."""
+        self.window.shift(delta)
+        self._labels = self.window.labels()
+        lo, hi = self.window.span
+        self.hint = (f"Input keys now {note_name(lo)}..{note_name(hi)} "
+                     f"(window shift {self.window.offset:+d}).")
 
     def _toggle_mode(self) -> None:
         self._all_notes_off(clear_staged=True)             # release held/committed; clear pending
@@ -198,6 +212,12 @@ class StagedApp:
             if event.key == pygame.K_TAB:
                 self._toggle_mode()
                 return True
+            if event.key == self._shift_down_key:          # slide the input window (either mode)
+                self._shift_window(-1)
+                return True
+            if event.key == self._shift_up_key:
+                self._shift_window(+1)
+                return True
             shift = bool(event.mod & pygame.KMOD_SHIFT)
             if event.key == self._z_key:                   # preset: fire / (shift) forget
                 self._preset_forget() if shift else self._preset_fire()
@@ -205,10 +225,11 @@ class StagedApp:
             if self.mode == "staged" and event.key == pygame.K_SPACE:
                 self._play_chord()
                 return True
-            if event.key in self.key_to_midi:
-                midi = self.key_to_midi[event.key]
+            midi = self.window.resolve(event.key)
+            if midi is not None:
                 if self.mode == "live":
                     self._press(midi)
+                    self._held_key_midi[event.key] = midi  # remember the pitch, for a stuck-free off
                 elif shift:
                     self._stage_shift(midi)
                 else:
@@ -216,8 +237,14 @@ class StagedApp:
             return True
 
         if event.type == pygame.KEYUP:
-            if self.mode == "live" and event.key in self.key_to_midi:
-                self._release(self.key_to_midi[event.key])  # staged mode: KEYUP ignored
+            if self.mode == "live":                         # staged mode: KEYUP ignored
+                midi = self._held_key_midi.pop(event.key, None)
+                # Release the pitch this key pressed (not the window's current target -- a shift may
+                # have moved it), and only once NO other held key still targets that pitch. A shift
+                # can land two keys on one pitch, and the router dedups by pitch, so an eager off
+                # would cut a note still held by the other key.
+                if midi is not None and midi not in self._held_key_midi.values():
+                    self._release(midi)
             return True
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -240,13 +267,16 @@ class StagedApp:
         self.screen.fill(hud.BG)
         staged_names = [note_name(m) for m in self.staged]
         preset_names = [note_name(m) for m in self.preset] if self.preset else None
+        lo, hi = self.window.span
+        window_label = f"keys {note_name(lo)}-{note_name(hi)}  (q/\\ shift {self.window.offset:+d})"
         self.hud.draw(self.screen, mode=self.mode, staged_names=staged_names,
                       preset_names=preset_names, tuning_label=self.tuning_label,
-                      hint=self.hint)
+                      hint=self.hint, window_label=window_label)
         hud.draw_keyboard(
             self.screen, self.wk, self.bk,
             held=self.router.held, staged=set(self.staged), flashing=self._flashing(),
             labels=self._labels, key_font=self._key_font, name_font=self._name_font,
+            bound=self.window.bound_midis(),
         )
 
     def run(self) -> None:

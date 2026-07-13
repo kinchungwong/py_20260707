@@ -81,6 +81,47 @@ def _selftest(voice, tuning, label) -> None:
         drive(40)
         assert app.synth.active_count() == 0
 
+        # input window: q/\ re-aim future input; the clamp keeps it on-screen
+        assert app.window.offset == 0
+        assert app.window.resolve(pygame.key.key_code("a")) == 60
+        special(pygame.key.key_code("q"))              # slide down one semitone
+        assert app.window.offset == -1
+        assert app.window.resolve(pygame.key.key_code("a")) == 59
+        for _ in range(40):
+            special(pygame.key.key_code("q"))
+        assert app.window.offset == -12, app.window.offset      # clamped at the low bound
+        for _ in range(60):
+            special(pygame.key.key_code("\\"))
+        assert app.window.offset == 6, app.window.offset        # clamped at the high bound
+        for _ in range(6):
+            special(pygame.key.key_code("q"))
+        assert app.window.offset == 0
+
+        # re-aim only: a note held across a shift releases the pitch it STARTED at (no stuck note)
+        kd("a")                                        # press C4 at offset 0
+        assert app.router.held == {60}
+        special(pygame.key.key_code("q"))              # slide down WHILE held
+        ku("a")                                        # must still off 60, not 59
+        drive(40)
+        assert app.synth.active_count() == 0, "held note stuck after a mid-hold window shift"
+        special(pygame.key.key_code("\\"))             # restore offset 0
+        assert app.window.offset == 0
+
+        # two keys landed on ONE pitch by a shift must not cut each other off (router dedups by
+        # pitch): the note holds until the LAST of them releases
+        kd("d")                                        # press E4 = 64 at offset 0
+        assert app.router.held == {64}
+        special(pygame.key.key_code("q")); special(pygame.key.key_code("q"))   # offset -2
+        kd("t")                                        # 't' now targets 64 too
+        assert app.router.held == {64}
+        ku("d")                                        # first release must NOT silence 64 ('t' holds it)
+        assert app.router.held == {64}, "note dropped while another key still targets it"
+        ku("t")                                        # last release lets it go
+        drive(40)
+        assert app.synth.active_count() == 0, "note not released after the last holder"
+        special(pygame.key.key_code("\\")); special(pygame.key.key_code("\\"))  # restore offset 0
+        assert app.window.offset == 0
+
         # staged: stage C-E-G, render, then Play chord -> 3 voices sound, tray cleared
         special(pygame.K_TAB)
         assert app.mode == "staged"
