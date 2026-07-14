@@ -13,8 +13,9 @@ Design decisions baked in (all "spike-simple"; see README.md / status_active.md)
     over it (layout.InputWindow); q/\\ slide it a semitone, re-aiming future input only, so a
     held note keeps its pitch (_held_key_midi releases the pitch pressed, not the new target,
     and refcounts by pitch so two keys landed on one note by a shift don't cut each other off).
-  * live vs staged: a persistent toggle (Tab / Mode button). Staged staging is press-only
-    (KEYUP ignored) -- clean because pygame doesn't auto-repeat KEYDOWN.
+  * live vs staged: a persistent toggle (Tab / Mode button). Staged entry uses PRESS DURATION
+    (press.py): a short note tap auditions only, a long hold auditions + stages; space short =
+    audition the chord (kept), long = play + clear. One idiom: short = trial, long = commit.
   * audition on stage: a pygame.mixer one-shot sine behind _audition() (library-free).
   * commit (Play chord / preset fire): fire-and-forget note-ons minted DIRECTLY onto the
     queue (sounder_id = midi, bypassing the router's held-model, no note-off), so they
@@ -86,6 +87,7 @@ class StagedApp:
         self._flash: dict[int, int] = {}                   # midi -> expiry (ticks ms)
         self._ringing: set[int] = set()                    # committed ids w/ no natural off
         self._held_key_midi: dict[int, int] = {}           # live keycode -> midi it pressed
+        self._press_midi: dict[int, int] = {}              # staged plain-press keycode -> auditioned midi
         self.hint = "Live mode. Tab to enter staged entry."
         self.press = press.PressTimer(SPACE_LONG_S)        # space short/long classifier
         self._now = time.perf_counter                      # injectable clock (headless tests)
@@ -124,7 +126,8 @@ class StagedApp:
                                       time.perf_counter()))
         self._ringing.clear()
         self._held_key_midi.clear()
-        self.press.cancel()                                # drop any in-flight space press
+        self._press_midi.clear()
+        self.press.cancel()                                # drop any in-flight press (space or note)
         self.router = InputRouter(tuning=self._tuning)     # keep the temperament
         if clear_staged:
             self.staged.clear()
@@ -147,10 +150,9 @@ class StagedApp:
                      if self.mode == "staged"
                      else "Live mode. Tab to enter staged entry.")
 
-    def _stage_plain(self, midi: int) -> None:
+    def _stage(self, midi: int) -> None:                   # long-hold commit; audition already fired
         if midi not in self.staged:
             self.staged.append(midi)
-        self._audition(midi)                               # reminder even if already staged
 
     def _stage_shift(self, midi: int) -> None:             # toggle == "forget" gesture
         if midi in self.staged:
@@ -252,13 +254,16 @@ class StagedApp:
                     self._press(midi)
                     self._held_key_midi[event.key] = midi  # remember the pitch, for a stuck-free off
                 elif shift:
-                    self._stage_shift(midi)
-                else:
-                    self._stage_plain(midi)
+                    self._stage_shift(midi)                # forget/toggle (immediate)
+                else:                                      # staged plain: audition now, stage on long hold
+                    self.press.key_down(event.key, self._now())
+                    self._press_midi[event.key] = midi     # stage the pitch we auditioned, not a post-shift one
+                    self._audition(midi)
+                    self.hint = f"Trialling {note_name(midi)} - hold to stage it."
             return True
 
         if event.type == pygame.KEYUP:
-            if self.mode == "staged":                       # staged: only space uses KEYUP (press-duration)
+            if self.mode == "staged":                       # staged: space + note keys use press-duration
                 if event.key == pygame.K_SPACE:
                     kind = self.press.key_up(pygame.K_SPACE, self._now())
                     if kind == "long":                      # play + clear (notes already sounding)
@@ -267,6 +272,11 @@ class StagedApp:
                         self.hint = f"Played + cleared:  {names}" if names else "Nothing staged."
                     elif kind == "short":                   # audition: keep the staged chord
                         self.hint = "Auditioned - staged kept. Hold space longer to play + clear."
+                    return True
+                midi = self._press_midi.pop(event.key, None)   # a plain note-key press released
+                if midi is not None and self.press.key_up(event.key, self._now()) == "long":
+                    self._stage(midi)                       # long hold = audition (already fired) + stage
+                    self.hint = f"Staged {note_name(midi)}."
                 return True
             midi = self._held_key_midi.pop(event.key, None)
             # Release the pitch this key pressed (not the window's current target -- a shift may

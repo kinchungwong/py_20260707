@@ -7,10 +7,13 @@ Parent: [`current.md`](current.md) → Active. Work lands in
 
 ## Status
 
-**Code complete + selftest green (2026-07-13).** Space-bar press-duration works headlessly
-(piano + sine): short = audition (keeps staged), long = play + clear, sound on KEYDOWN.
-Remaining: **live feel-tuning** of the threshold + the per-key-type check on real hardware,
-and the human feel-evaluation. See the open questions (answered) below.
+**Code complete + selftest green (2026-07-13); feel-evaluated.** Space-bar press-duration
+(short = audition the chord / kept, long = play + clear, sound on KEYDOWN) **and** staged
+NOTE-key press-duration (short tap = audition only, long hold = audition + stage) both work
+headlessly (piano + sine). One idiom: short = trial, long = commit. Threshold 0.20 s
+confirmed "good enough for now" live. Remaining: the per-key-type reliability check on real
+hardware (still open). Note-key press-duration was **added mid-step per 2026-07-13 feedback**
+(the original Q3 scoped this round to the space bar only).
 
 ## Scope
 

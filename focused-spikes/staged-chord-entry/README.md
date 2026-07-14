@@ -25,8 +25,9 @@ chain headlessly and asserts a committed chord actually sounds and the HUD rende
 - **Tab** — toggle live / staged (also the Mode button).
 - **Note keys** — home row **a s d f g h j k l ; '** = the white keys (`a`..`j` span the
   middle octave C4..B4; `k l ; '` reach up), upper row **w e t y u o p** = the black keys
-  between them. Live mode: press-and-hold to play. Staged mode: each key **stages** a note
-  (a short sine audition fires); **Shift+key** toggles a staged note off ("forget").
+  between them. Live mode: press-and-hold to play. Staged mode: **press-duration** — a short
+  **tap** auditions a note only; **holding** it auditions + **stages** it; **Shift+key**
+  toggles a staged note off ("forget").
 - **q** / **\** — slide the input window down / up one semitone (either mode). It re-aims
   *future* input only; notes already held or committed keep their pitch. All three octaves
   are drawn; the blue bar marks where your keys currently point.
