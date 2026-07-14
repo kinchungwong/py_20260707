@@ -61,6 +61,11 @@ just live in this discussion.
 
 ## Open questions
 
+*Resolved 2026-07-13 — decisions recorded in
+[`../../plans/programming-modes-buildout.md`](../../plans/programming-modes-buildout.md)
+(save-your-own; row-delimited `z–m` launcher zone; coexists with live mode; saved
+chords fire at saved pitch). Kept below as the original framing.*
+
 - **Where do a launcher key's chords come from?** A preloaded bank (e.g. diatonic
   triads of a key, out of the box) vs. save-your-own (generalize today's `Z`) vs. a
   mix (defaults you can overwrite).

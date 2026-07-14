@@ -1,8 +1,33 @@
 # Plan: programming-modes buildout
 
-**Status: Draft** (2026-07-13). Sequences the work coming out of the 2026-07-13
-discussion (`../discussions/2026-07-13/`). Not yet decomposed into `../tasks/`; several
-open questions below must be answered first.
+**Status: Active** (2026-07-13; promoted from Draft the same day once the blocking
+questions were resolved — see "Decisions" below). Sequences the work coming out of the
+2026-07-13 discussion (`../discussions/2026-07-13/`). Step 1 is unblocked; only the
+melody-spike-scoped Q4 remains open. Not yet decomposed into `../tasks/`.
+
+## Decisions (resolved 2026-07-13)
+
+- **Chord source: save-your-own** (Q1). Build a chord in staged mode, bind it to a
+  launcher key. File load/save is a later add.
+- **Launcher keys: row-delimited zones** (a). A zone = a contiguous run within one
+  keyboard row, given by its leftmost+rightmost key `{row, left, right, role}`, resolved
+  against the row order in `gui/qwerty.py` / `layout.py`. v1 ships a **fixed default**
+  (bottom row `z–m` = launcher, home+upper rows = note-entry) expressed *through* that
+  zone structure, so later reconfiguration is data, not a rewrite. **No config UI yet.**
+- **Launcher coexists with live mode** (Q2): saved chords fire in **both** modes
+  (generalizes today's `Z`), so the launcher does not replace live mode.
+- **Saved chords fire at saved absolute pitch** (b1). On-the-fly chord transposition
+  (b2) is parked — a semitone nudge is too blunt for chords; its gesture stays open.
+- **Note-window shift redesign is parked**, not gating step 1: the `q`/`\` semitone
+  shift breaks the white/black mnemonic (geometry, not a bug). Terminology + the
+  isomorphic-geometry option live in
+  `../discussions/2026-07-13/note-entry-shift-and-keyboard-geometry.md` →
+  `../speculations/isomorphic-hex-keyboard-geometry.md`.
+- **Melody mode = a new spike** (Q3): it needs a bar/timeline display pane plus a
+  details text area — a whole UI surface, too much to bolt onto the current spike.
+- **Shared machinery: lift opportunistically** (Q5): promote code to
+  `focused-spikes/shared/` as it stabilizes during the current spike, rather than
+  designing the shared layer up front.
 
 ## Goal
 
@@ -27,11 +52,12 @@ accepted as a hardware dead end and is **not** a goal.
 ## Proposed sequence
 
 1. **Chord launcher (staged mode) — the pivot.** Generalize the single `Z` preset into
-   **each key auto-plays a saved chord**. Answer open Q1 first (preloaded bank vs.
-   save-your-own vs. mix). Deliver as the next iteration of the existing spike; it needs
-   no mouse work, so it gives the fastest "does this feel right?" signal. Pin the demo to
+   **each launcher-zone key auto-plays a saved chord** (save-your-own; default zone =
+   bottom row `z–m`; fires in both live and staged modes; saved chords play at saved
+   absolute pitch). Deliver as the next iteration of the existing spike; it needs no
+   mouse work, so it gives the fastest "does this feel right?" signal. Pin the demo to
    **12-TET** (JI conflicts with the semitone shift — see the discussion / graduate to
-   `../memory/musictheory/`).
+   `../memory/musictheory/`). Leave the note-window shift as-is (redesign is parked).
 2. **Press-duration input primitive (E).** Extract short-press-vs-long-press as reusable
    input machinery: staged mode's space bar (short = audition, long = play + clear) and
    the melody mode's Phase-1 entry (short = audition, long = commit) are the **same
@@ -57,11 +83,14 @@ accepted as a hardware dead end and is **not** a goal.
   (press-duration, mouse hit-test, and the audition→`PolySynth` consolidation named in
   the spike `status_active.md`) are graduation candidates, not per-spike-forever.
 
-## Open questions (resolve before decomposing into tasks)
+## Open questions
 
-1. **Chord-launcher source model**: preloaded bank vs. save-your-own vs. mix? (Blocks 1.)
-2. **Mode relationship**: does the launcher replace live mode or sit beside it? Does
-   `q`/`\` transpose whole chords now? (Shapes 1 and 4.)
-3. **Melody mode = new spike or extension** of staged-chord-entry? (Shapes 5.)
-4. **Timing model** for melody base notes: grid/transport vs. free-then-edited? (Shapes 5.)
-5. How much machinery is **genuinely shared** vs. mode-specific (what graduates to `src/`)?
+Q1, Q2, Q3, Q5 and sub-questions (a)/(b) are **resolved** — see "Decisions" above.
+Remaining:
+
+4. **Timing model** for melody base notes: grid/transport vs. free-then-edited?
+   Deferred until the melody spike (5) starts — not blocking near-term work.
+
+Parked (own docs, not gating this plan): on-the-fly chord transpose gesture (b2);
+the note-window shift redesign / keyboard geometry
+(`../speculations/isomorphic-hex-keyboard-geometry.md`).
