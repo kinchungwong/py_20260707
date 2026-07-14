@@ -32,13 +32,14 @@
   Launcher-slot clickability stays out (its readout sits inside the HUD strip — step 4 /
   pane refactor). `--selftest` asserts resolution: HUD button→action, HUD background→None,
   a staged-only button inert in live mode, white→midi, black-over-white order guard, and
-  below-keyboard→None. Liftable to `shared/` when the melody spike (step 5) needs it.
+  below-keyboard→None. Liftable to `shared/` when the melody spike (step 6) needs it.
 - **Resting point (2026-07-14).** Chord launcher + press-duration are feel-evaluated
-  (positive verdict); the mouse hit-test core is built and selftest-green. Next awaited
-  feature: **editing saved chords** (the visibility / editing surface), deferred pending a
-  UI-pane-modularization refactor + architecture review. Next mechanical step: **step 4 —
-  mouse in staged mode** (wire the resolved keyboard/launcher hits to action). Per-key-type
-  press-duration check on real hardware still open.
+  (positive verdict); the mouse hit-test core is built and selftest-green. Next mechanical
+  step: **step 4 (C) — mouse in staged mode** (wire the resolved keyboard/launcher hits to
+  action) — the **last work in scope for this spike**. Everything after C is a new spike:
+  **editing saved chords** (the stored-chord visibility / editing surface) is folded into
+  **UI pane modularization**, now sequenced as **plan step 5 (F)** between C and D, then
+  **melody mode (step 6, D)**. Per-key-type press-duration check on real hardware still open.
 
 Auditions use a lightweight `pygame.mixer` one-shot sine (`audition.py`) — a deliberate
 SECOND acoustic authority, taken on knowingly to keep the spike simple. It is kept behind

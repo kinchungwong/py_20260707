@@ -26,11 +26,11 @@ feel-evaluated; at a **resting point** pending the chord-editing surface.
   Both tested headlessly (selftest green, piano + sine) and in live sessions; the user's
   verdict is positive ("good enough, nothing to complain about"). Findings + parked tweaks
   (e.g. the ~1.5 s staged-note-duration idea) are in the spike README "Finding".
-- **Resting point — user on a break (2026-07-13).** The next thing the user is waiting on is
-  **editing saved chords** — the stored-chord **visibility / editing surface**. It is
-  **deferred pending a UI-pane-modularization refactor + architecture review** (the spike UI
-  wasn't built for modular panes; overlaps the melody-editor WYSIWYG) — see the plan's
-  "Deferred" section. **Do not start it without that review.**
+- **Editing saved chords — the stored-chord visibility / editing surface** is now folded
+  into the **UI pane modularization** work, **sequenced as plan step 5 (F), a new spike
+  between C and D** (re-scoped 2026-07-14). The architecture review is now the first task of
+  that step, not a gate before it. It is NOT part of the current `staged-chord-entry`
+  spike — see the plan's "Sequenced (was deferred)" section and "Scope boundary".
 - **Step 3 — mouse hit-test core — built + selftest green (2026-07-14).** Sidecar:
   **[`mouse-hit-test.md`](mouse-hit-test.md)**. New `hittest.py`: a coarse-to-fine
   `(region, gadget)` resolver (`Region` StrEnum + `RegionSpec` + `pick`) unifying `Hud.hit`
@@ -54,10 +54,12 @@ Bootstrap infrastructure (unchanged, still relevant): the library isn't pip-inst
 
 ## Backlog / deferred
 
-- **Plan steps after the chord launcher** (see the plan for the dependency shape):
-  press-duration input primitive (2) → mouse hit-test core (3) → mouse in staged mode (4)
-  → **melody-editing mode as a new spike** (5; needs a bar/timeline pane + details area).
-  Q4 (melody timing model) stays open, scoped to step 5.
+- **Plan sequence** (see the plan for the dependency shape): press-duration (2) → mouse
+  hit-test core (3) → **mouse in staged mode (4, C — next; last step in the current spike)**
+  → **UI pane modularization (5, F — NEW spike; includes the stored-chord visibility surface)**
+  → **melody-editing mode (6, D — NEW spike; bar/timeline pane + details area)**. In scope
+  for `staged-chord-entry` = through step 4 only; steps 5–6 are new spikes. Q4 (melody
+  timing model) stays open, scoped to step 6.
 - **Focused-spike candidate — just-intonation color:** derive cents from frequency ratios
   (e.g. neutral third 11/9 ≈ 347.4c) instead of a fixed cent grid. Note: JI conflicts with
   the note-window semitone shift, so the *current* demo stays 12-TET (see the plan).
