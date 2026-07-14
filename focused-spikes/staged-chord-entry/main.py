@@ -71,6 +71,9 @@ def _selftest(voice, tuning, label) -> None:
         def click(pos):
             app.dispatch(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=pos, button=1))
 
+        def ku_key(key):
+            app.dispatch(pygame.event.Event(pygame.KEYUP, key=key))
+
         app.render()                                   # live-mode HUD draws without error
 
         # live mode: hold a note -> one voice, then release -> silent
@@ -122,17 +125,28 @@ def _selftest(voice, tuning, label) -> None:
         special(pygame.key.key_code("\\")); special(pygame.key.key_code("\\"))  # restore offset 0
         assert app.window.offset == 0
 
-        # staged: stage C-E-G, render, then Play chord -> 3 voices sound, tray cleared
+        # staged: stage C-E-G, then exercise SPACE press-duration. Sound fires on KEYDOWN;
+        # a SHORT release auditions (keeps staged), a LONG release plays + clears. An injected
+        # clock makes the hold durations deterministic (threshold SPACE_LONG_S = 0.20s).
         special(pygame.K_TAB)
         assert app.mode == "staged"
+        clock = [0.0]
+        app._now = lambda: clock[0]
         kd("a"); kd("d"); kd("g")                       # C4 E4 G4
         assert app.staged == [60, 64, 67], app.staged
         app.render()                                   # staged-mode HUD + highlights draw
-        special(pygame.K_SPACE)                        # commit
-        assert app.staged == [], "staged not cleared after Play chord"
+
+        # short space press (0.05s < 0.20s): chord sounds, staged is KEPT
+        special(pygame.K_SPACE); clock[0] += 0.05; ku_key(pygame.K_SPACE)
         peak = drive(6)
         assert app.synth.active_count() == 3, app.synth.active_count()
-        assert peak > 0.0, "committed chord produced no sound"
+        assert peak > 0.0, "space audition produced no sound"
+        assert app.staged == [60, 64, 67], "short space press must keep the staged chord"
+
+        # long space press (0.50s >= 0.20s): plays and CLEARS
+        special(pygame.K_SPACE); clock[0] += 0.50; ku_key(pygame.K_SPACE)
+        assert app.staged == [], "long space press must clear the staged chord"
+        assert drive(6) > 0.0, "long space press produced no sound"
 
         # shift toggles a staged note off (forget), then Save -> the next empty launcher slot
         kd("s"); kd("s", mod=pygame.KMOD_SHIFT)        # stage then un-stage D4
@@ -172,9 +186,9 @@ def _selftest(voice, tuning, label) -> None:
         special(pygame.key.key_code("z"))
         assert drive(6) == 0.0 and app.synth.active_count() == 0, "forgotten slot still fires"
 
-        print(f"selftest OK ({voice}, {label}): live hold, staged C-E-G commit "
-              f"(peak {peak:.3f}), save->next launcher slot, launcher fires in both modes, "
-              "forget clears a slot, focus-loss all-off, HUD renders. No device opened.")
+        print(f"selftest OK ({voice}, {label}): live hold, staged C-E-G, space short=audition/"
+              f"long=play+clear (peak {peak:.3f}), save->next launcher slot, launcher fires in "
+              "both modes, forget clears a slot, focus-loss all-off, HUD renders. No device opened.")
     finally:
         app.close()
 

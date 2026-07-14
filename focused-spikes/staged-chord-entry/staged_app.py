@@ -36,12 +36,14 @@ from pypiano_2607.gui import offset_keys, note_name, MARGIN
 
 import hud
 import layout
+import press
 from audition import Audition
 
 HUD_H = 200
 WIN_W = layout.WIDTH + 2 * MARGIN
 WIN_H = HUD_H + layout.HEIGHT + MARGIN
 FLASH_MS = 350
+SPACE_LONG_S = 0.20        # space-bar hold >= this => play + clear; below => audition (kept). Tune on device.
 
 
 class StagedApp:
@@ -85,6 +87,8 @@ class StagedApp:
         self._ringing: set[int] = set()                    # committed ids w/ no natural off
         self._held_key_midi: dict[int, int] = {}           # live keycode -> midi it pressed
         self.hint = "Live mode. Tab to enter staged entry."
+        self.press = press.PressTimer(SPACE_LONG_S)        # space short/long classifier
+        self._now = time.perf_counter                      # injectable clock (headless tests)
 
     # --- audio helpers --------------------------------------------------------
 
@@ -120,6 +124,7 @@ class StagedApp:
                                       time.perf_counter()))
         self._ringing.clear()
         self._held_key_midi.clear()
+        self.press.cancel()                                # drop any in-flight space press
         self.router = InputRouter(tuning=self._tuning)     # keep the temperament
         if clear_staged:
             self.staged.clear()
@@ -153,6 +158,12 @@ class StagedApp:
         else:
             self.staged.append(midi)
             self._audition(midi)
+
+    def _fire_staged(self) -> None:
+        """Fire the staged notes so they sound (fire-and-forget), WITHOUT clearing them --
+        the audio for a space press, short or long. Sound happens on KEYDOWN."""
+        for midi in self.staged:
+            self._fire(midi)
 
     def _play_chord(self) -> None:
         if not self.staged:
@@ -230,7 +241,10 @@ class StagedApp:
                 self._launcher_forget(slot) if shift else self._launcher_fire(slot)
                 return True
             if self.mode == "staged" and event.key == pygame.K_SPACE:
-                self._play_chord()
+                self.press.key_down(pygame.K_SPACE, self._now())   # sound now; short/long on release
+                self._fire_staged()
+                names = "  ·  ".join(note_name(m) for m in self.staged)
+                self.hint = f"Auditioning:  {names}" if self.staged else "Nothing staged yet."
                 return True
             midi = self.window.resolve(event.key)
             if midi is not None:
@@ -244,14 +258,23 @@ class StagedApp:
             return True
 
         if event.type == pygame.KEYUP:
-            if self.mode == "live":                         # staged mode: KEYUP ignored
-                midi = self._held_key_midi.pop(event.key, None)
-                # Release the pitch this key pressed (not the window's current target -- a shift may
-                # have moved it), and only once NO other held key still targets that pitch. A shift
-                # can land two keys on one pitch, and the router dedups by pitch, so an eager off
-                # would cut a note still held by the other key.
-                if midi is not None and midi not in self._held_key_midi.values():
-                    self._release(midi)
+            if self.mode == "staged":                       # staged: only space uses KEYUP (press-duration)
+                if event.key == pygame.K_SPACE:
+                    kind = self.press.key_up(pygame.K_SPACE, self._now())
+                    if kind == "long":                      # play + clear (notes already sounding)
+                        names = "  ·  ".join(note_name(m) for m in self.staged)
+                        self.staged.clear()
+                        self.hint = f"Played + cleared:  {names}" if names else "Nothing staged."
+                    elif kind == "short":                   # audition: keep the staged chord
+                        self.hint = "Auditioned - staged kept. Hold space longer to play + clear."
+                return True
+            midi = self._held_key_midi.pop(event.key, None)
+            # Release the pitch this key pressed (not the window's current target -- a shift may
+            # have moved it), and only once NO other held key still targets that pitch. A shift
+            # can land two keys on one pitch, and the router dedups by pitch, so an eager off
+            # would cut a note still held by the other key.
+            if midi is not None and midi not in self._held_key_midi.values():
+                self._release(midi)
             return True
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
