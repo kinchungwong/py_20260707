@@ -134,28 +134,47 @@ def _selftest(voice, tuning, label) -> None:
         assert app.synth.active_count() == 3, app.synth.active_count()
         assert peak > 0.0, "committed chord produced no sound"
 
-        # shift toggles a staged note off (forget), then Save via the HUD button (mouse)
+        # shift toggles a staged note off (forget), then Save -> the next empty launcher slot
         kd("s"); kd("s", mod=pygame.KMOD_SHIFT)        # stage then un-stage D4
         assert app.staged == [], app.staged
-        kd("a"); kd("d"); kd("g")
-        click(app.hud.save_rect.center)                # Save chord -> Z
-        assert app.preset == [60, 64, 67], app.preset
+        kd("a"); kd("d"); kd("g")                       # C4 E4 G4
+        click(app.hud.save_rect.center)                # Save -> first empty slot (z)
+        assert app.slots[0] == [60, 64, 67], app.slots
         assert app.staged == []
 
-        # fire the preset (Z, either mode), then forget it (shift+Z)
-        special(app._z_key)
-        assert drive(6) > 0.0, "preset fire produced no sound"
-        special(app._z_key, mod=pygame.KMOD_SHIFT)
-        assert app.preset is None
+        # a second Save auto-picks the NEXT empty slot (x)
+        kd("f"); kd("h")                                # F4 A4
+        click(app.hud.save_rect.center)
+        assert app.slots[1] == [65, 69], app.slots
 
-        # focus loss silences committed/ringing notes
-        app.dispatch(pygame.event.Event(pygame.WINDOWFOCUSLOST))
-        drive(60)
-        assert app.synth.active_count() == 0, "focus-loss did not silence committed notes"
+        # a launcher key fires its chord in BOTH modes at saved absolute pitch (b1). Test each
+        # from silence so the voice count is exact.
+        def silence():
+            app.dispatch(pygame.event.Event(pygame.WINDOWFOCUSLOST))
+            drive(60)
+            assert app.synth.active_count() == 0, app.synth.active_count()
+
+        silence()
+        assert app.mode == "staged"
+        special(pygame.key.key_code("z"))              # slot z fires in STAGED mode
+        assert drive(6) > 0.0 and app.synth.active_count() == 3, app.synth.active_count()
+
+        silence()
+        special(pygame.K_TAB)
+        assert app.mode == "live"
+        special(pygame.key.key_code("x"))              # slot x fires in LIVE mode
+        assert drive(6) > 0.0 and app.synth.active_count() == 2, app.synth.active_count()
+
+        # forget a slot (shift+z): it clears, and firing it is then silent
+        special(pygame.key.key_code("z"), mod=pygame.KMOD_SHIFT)
+        assert app.slots[0] is None, app.slots
+        silence()
+        special(pygame.key.key_code("z"))
+        assert drive(6) == 0.0 and app.synth.active_count() == 0, "forgotten slot still fires"
 
         print(f"selftest OK ({voice}, {label}): live hold, staged C-E-G commit "
-              f"(peak {peak:.3f}), forget, save→Z fire, focus-loss all-off, HUD renders. "
-              "No device opened.")
+              f"(peak {peak:.3f}), save->next launcher slot, launcher fires in both modes, "
+              "forget clears a slot, focus-loss all-off, HUD renders. No device opened.")
     finally:
         app.close()
 

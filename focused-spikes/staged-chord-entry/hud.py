@@ -69,7 +69,7 @@ class Hud:
         surf = font.render(label, True, col)
         screen.blit(surf, surf.get_rect(center=rect.center))
 
-    def draw(self, screen, *, mode, staged_names, preset_names, tuning_label, hint, window_label):
+    def draw(self, screen, *, mode, staged_names, slot_labels, slots_full, tuning_label, hint, window_label):
         f = self.fonts()
         pygame.draw.rect(screen, PANEL, pygame.Rect(0, 0, self.width, self.hud_h))
         pygame.draw.line(screen, BORDER, (0, self.hud_h - 1), (self.width, self.hud_h - 1))
@@ -89,15 +89,20 @@ class Hud:
             screen.blit(f["mid"].render(tray, True, TEXT if staged_names else TEXT_MUTED),
                         (self.margin, 62))
             self._button(screen, self.play_rect, "Play chord (space)", f["small"])
-            if preset_names is None:
-                self._button(screen, self.save_rect, "Save chord -> Z", f["small"])
+            if not slots_full:
+                self._button(screen, self.save_rect, "Save chord", f["small"])
             else:
-                self._button(screen, self.save_rect, "Preset full", f["small"], muted=True)
+                self._button(screen, self.save_rect, "Slots full", f["small"], muted=True)
             self._button(screen, self.release_rect, "Release", f["small"])
 
-        pv = "  ·  ".join(preset_names) if preset_names else "(empty)"
-        screen.blit(f["small"].render("Z:  " + pv, True,
-                    TEXT if preset_names else TEXT_MUTED), (self.margin, 148))
+        # launcher slot readout — one line; a fuller status area is a deferred HUD rework
+        x = self.margin
+        lead = f["small"].render("Launch ", True, TEXT_MUTED)
+        screen.blit(lead, (x, 148)); x += lead.get_width() + 6
+        for ch, names in slot_labels:
+            tok = f"{ch}:" + ("·".join(names) if names else "–")
+            surf = f["small"].render(tok, True, TEXT if names else TEXT_MUTED)
+            screen.blit(surf, (x, 148)); x += surf.get_width() + 14
 
         screen.blit(f["small"].render(hint, True, TEXT_MUTED), (self.margin, 176))
 
