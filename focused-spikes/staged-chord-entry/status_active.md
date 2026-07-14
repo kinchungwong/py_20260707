@@ -16,8 +16,11 @@
 - **Press-duration primitive (2026-07-13)** — step 2. A reusable, clock-injectable
   `PressTimer` (`press.py`) classifies key holds short vs long; wired to the staged-mode
   space bar: short = audition (keeps staged), long = play + clear, with the sound firing on
-  KEYDOWN. Threshold `SPACE_LONG_S` (default 0.2 s) needs live tuning. `--selftest` covers
-  both branches via an injected clock. Liftable to `shared/` when the melody spike reuses it.
+  KEYDOWN. Threshold `SPACE_LONG_S` (default 0.2 s) confirmed "good enough for now" in a live
+  session. `--selftest` covers both branches via an injected clock. Liftable to `shared/`
+  when the melody spike reuses it. **Extended to staged NOTE keys** (user feedback): a short
+  tap auditions only, a long hold auditions + stages — one idiom (short = trial, long =
+  commit) across the trial→record flow.
 
 Auditions use a lightweight `pygame.mixer` one-shot sine (`audition.py`) — a deliberate
 SECOND acoustic authority, taken on knowingly to keep the spike simple. It is kept behind

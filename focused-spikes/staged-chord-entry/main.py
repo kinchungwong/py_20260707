@@ -125,14 +125,23 @@ def _selftest(voice, tuning, label) -> None:
         special(pygame.key.key_code("\\")); special(pygame.key.key_code("\\"))  # restore offset 0
         assert app.window.offset == 0
 
-        # staged: stage C-E-G, then exercise SPACE press-duration. Sound fires on KEYDOWN;
-        # a SHORT release auditions (keeps staged), a LONG release plays + clears. An injected
-        # clock makes the hold durations deterministic (threshold SPACE_LONG_S = 0.20s).
+        # staged: NOTE-key press-duration — a short tap auditions only, a long hold stages.
+        # Then SPACE press-duration: short = audition the chord (kept), long = play + clear.
+        # An injected clock makes hold durations deterministic (threshold 0.20s).
         special(pygame.K_TAB)
         assert app.mode == "staged"
         clock = [0.0]
         app._now = lambda: clock[0]
-        kd("a"); kd("d"); kd("g")                       # C4 E4 G4
+
+        def tap(ch):                                    # short note press -> audition only
+            special(pygame.key.key_code(ch)); clock[0] += 0.05; ku_key(pygame.key.key_code(ch))
+
+        def hold(ch):                                   # long note press -> audition + stage
+            special(pygame.key.key_code(ch)); clock[0] += 0.30; ku_key(pygame.key.key_code(ch))
+
+        tap("a")
+        assert app.staged == [], "a short note tap must audition without staging"
+        hold("a"); hold("d"); hold("g")                 # long holds stage C4 E4 G4
         assert app.staged == [60, 64, 67], app.staged
         app.render()                                   # staged-mode HUD + highlights draw
 
@@ -148,16 +157,18 @@ def _selftest(voice, tuning, label) -> None:
         assert app.staged == [], "long space press must clear the staged chord"
         assert drive(6) > 0.0, "long space press produced no sound"
 
-        # shift toggles a staged note off (forget), then Save -> the next empty launcher slot
-        kd("s"); kd("s", mod=pygame.KMOD_SHIFT)        # stage then un-stage D4
+        # Shift+note un-stages (immediate); then stage + Save -> next empty launcher slot (z)
+        hold("s")                                       # stage D4
+        assert app.staged == [62], app.staged
+        kd("s", mod=pygame.KMOD_SHIFT)                  # shift-toggle un-stages it
         assert app.staged == [], app.staged
-        kd("a"); kd("d"); kd("g")                       # C4 E4 G4
+        hold("a"); hold("d"); hold("g")                 # C4 E4 G4
         click(app.hud.save_rect.center)                # Save -> first empty slot (z)
         assert app.slots[0] == [60, 64, 67], app.slots
         assert app.staged == []
 
         # a second Save auto-picks the NEXT empty slot (x)
-        kd("f"); kd("h")                                # F4 A4
+        hold("f"); hold("h")                            # F4 A4
         click(app.hud.save_rect.center)
         assert app.slots[1] == [65, 69], app.slots
 
@@ -186,9 +197,10 @@ def _selftest(voice, tuning, label) -> None:
         special(pygame.key.key_code("z"))
         assert drive(6) == 0.0 and app.synth.active_count() == 0, "forgotten slot still fires"
 
-        print(f"selftest OK ({voice}, {label}): live hold, staged C-E-G, space short=audition/"
-              f"long=play+clear (peak {peak:.3f}), save->next launcher slot, launcher fires in "
-              "both modes, forget clears a slot, focus-loss all-off, HUD renders. No device opened.")
+        print(f"selftest OK ({voice}, {label}): live hold; staged note tap=audition/hold=stage, "
+              f"space short=audition/long=play+clear (peak {peak:.3f}); save->next launcher slot, "
+              "launcher fires both modes, forget clears a slot, focus-loss all-off, HUD renders. "
+              "No device opened.")
     finally:
         app.close()
 
