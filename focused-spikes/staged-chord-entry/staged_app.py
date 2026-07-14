@@ -33,8 +33,9 @@ from pypiano_2607.router import InputRouter
 from pypiano_2607.audio import PolySynth, PianoVoice, SineVoice
 from pypiano_2607.pitch import midi_to_freq
 from pypiano_2607.config import SR
-from pypiano_2607.gui import offset_keys, note_name, MARGIN
+from pypiano_2607.gui import offset_keys, note_name, hit_test, MARGIN
 
+import hittest
 import hud
 import layout
 import press
@@ -73,6 +74,19 @@ class StagedApp:
         # spike UI
         self.hud = hud.Hud(WIN_W, HUD_H, MARGIN)
         self.launcher = layout.default_launcher_zone()     # bottom row z..m -> chord slots
+
+        # coarse-to-fine mouse hit-test (step 3): topmost-first regions, each pairing a coarse
+        # bounding box with its existing fine hit-test. HUD honours the current mode via the
+        # closure. Keyboard reuses the library's black-first hit_test verbatim. (Launcher-slot
+        # clickability is step 4 — its readout sits inside the HUD strip today.)
+        self._regions: list[hittest.RegionSpec] = [
+            (hittest.Region.HUD,
+             pygame.Rect(0, 0, WIN_W, HUD_H),
+             lambda p: self.hud.hit(p, self.mode)),
+            (hittest.Region.KEYBOARD,
+             pygame.Rect(MARGIN, HUD_H, layout.WIDTH, layout.HEIGHT),
+             lambda p: hit_test(p, self.wk, self.bk)),
+        ]
         self._shift_down_key = pygame.key.key_code("q")    # slide the input window down/up
         self._shift_up_key = pygame.key.key_code("\\")
         self.audition = Audition(range(layout.MIN_MIDI, layout.MAX_MIDI + 1), sr=SR)
@@ -184,9 +198,10 @@ class StagedApp:
         except ValueError:
             self.hint = "Launcher full - shift+key to forget a slot first."
             return
-        self.slots[idx] = list(self.staged)
+        saved = list(self.staged)                      # local: typed list[int], unlike the
+        self.slots[idx] = saved                        # list[int] | None re-read of a slot
         self.hint = (f"Saved to {self.launcher.char(idx)}:  "
-                     + "  ·  ".join(note_name(m) for m in self.slots[idx]))
+                     + "  ·  ".join(note_name(m) for m in saved))
         self.staged.clear()
 
     def _release_staged(self) -> None:
@@ -213,6 +228,26 @@ class StagedApp:
         elif action == "play":    self._play_chord()
         elif action == "save":    self._save_chord()
         elif action == "release": self._release_staged()
+
+    # --- mouse hit-test (step 3) ----------------------------------------------
+
+    def _hit(self, pos):
+        """Resolve a screen point to `(region, payload)` (or None) via the coarse-to-fine
+        core. The single seam the mouse goes through; also the selftest's assertion point."""
+        return hittest.pick(pos, self._regions)
+
+    def _on_click(self, pos) -> None:
+        """Act on a left-click. Step 3 is STRUCTURAL: only HUD buttons act (unchanged from
+        the old direct `Hud.hit` path). A piano-key hit is resolved but is a deliberate
+        no-op SEAM — step 4 (mouse in staged mode) wires it here, reusing the mouse_input
+        drag model (one active mouse note, glissando, off-on-empty; never `set_grab`)."""
+        hit = self._hit(pos)
+        if hit is None:
+            return
+        region, payload = hit
+        if region is hittest.Region.HUD and isinstance(payload, str):
+            self._hud_action(payload)              # mouse drives HUD buttons (action strings)
+        # Region.KEYBOARD, and any background (payload None): resolved, no action yet (step 4).
 
     # --- event dispatch -------------------------------------------------------
 
@@ -288,9 +323,7 @@ class StagedApp:
             return True
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            action = self.hud.hit(event.pos, self.mode)
-            if action is not None:
-                self._hud_action(action)                    # mouse drives HUD buttons only
+            self._on_click(event.pos)                       # coarse-to-fine hit-test (step 3)
             return True
 
         return True

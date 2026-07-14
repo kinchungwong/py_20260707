@@ -31,9 +31,16 @@ feel-evaluated; at a **resting point** pending the chord-editing surface.
   **deferred pending a UI-pane-modularization refactor + architecture review** (the spike UI
   wasn't built for modular panes; overlaps the melody-editor WYSIWYG) — see the plan's
   "Deferred" section. **Do not start it without that review.**
-- **Next mechanical step (when work resumes):** plan step 3 — the **mouse hit-test core**
-  (`collidepoint` scaffolding), which the editing surface will build on. The per-key-type
-  press-duration reliability check on real hardware also remains open.
+- **Step 3 — mouse hit-test core — built + selftest green (2026-07-14).** Sidecar:
+  **[`mouse-hit-test.md`](mouse-hit-test.md)**. New `hittest.py`: a coarse-to-fine
+  `(region, gadget)` resolver (`Region` StrEnum + `RegionSpec` + `pick`) unifying `Hud.hit`
+  + the library `gui.hit_test`; `MOUSEBUTTONDOWN` routes through it. **Foundational — no
+  behaviour change** (HUD acts as before; piano-key hits resolve to a no-op seam). Piano +
+  sine selftest green, `run_spike_tests.py` 14/14.
+- **Next mechanical step — step 4 (C): mouse in staged mode** — wire the resolved
+  keyboard/launcher hits to action (click to stage/explore chords, manage launcher
+  bindings), reusing the `mouse_input` drag model. The per-key-type press-duration
+  reliability check on real hardware also remains open.
 
 **v1 decisions that still hold** (still in force): audition via
 the `pygame.mixer` one-shot sine behind `_audition()`; commit path = fire-and-forget
