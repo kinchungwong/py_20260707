@@ -5,6 +5,13 @@ Granular checklist for **step 2** of
 Parent: [`current.md`](current.md) → Active. Work lands in
 `../../focused-spikes/staged-chord-entry/` (no edits to `src/`).
 
+## Status
+
+**Code complete + selftest green (2026-07-13).** Space-bar press-duration works headlessly
+(piano + sine): short = audition (keeps staged), long = play + clear, sound on KEYDOWN.
+Remaining: **live feel-tuning** of the threshold + the per-key-type check on real hardware,
+and the human feel-evaluation. See the open questions (answered) below.
+
 ## Scope
 
 Build a **reusable short-vs-long press primitive** and apply it to the **staged-mode space
@@ -23,20 +30,20 @@ reuse, so build it once and keep it liftable to `focused-spikes/shared/`.
 
 ## Checklist
 
-- [ ] **Primitive** — a small `press.py` (`PressTimer`): `key_down(keycode, t)` /
+- [x] **Primitive** — a small `press.py` (`PressTimer`): `key_down(keycode, t)` /
   `key_up(keycode, t) -> "short" | "long" | None`, classified against a configurable
   threshold. **Clock injectable** (takes explicit timestamps) so it is headless-testable.
   Liftable to `shared/` when the melody spike needs it.
-- [ ] **Wire the space bar (staged mode)** — start handling space KEYUP in staged mode:
+- [x] **Wire the space bar (staged mode)** — start handling space KEYUP in staged mode:
   record `t_down` on space KEYDOWN, classify on KEYUP → short = audition (see decision Q1),
   long = `_play_chord` (fire + clear).
-- [ ] **Threshold** — a named constant with a sensible default; note it needs live tuning
+- [x] **Threshold** — a named constant with a sensible default; note it needs live tuning
   (feel, per-device). Keep it in one place.
-- [ ] **Per-key-type check** (from the 2026-07-13 eval) — confirm KEYUP is reliably
+- [ ] **Per-key-type check** (from the 2026-07-13 eval; PENDING real hardware) — confirm KEYUP is reliably
   delivered for space (and note keys, if we extend later); document any key that misbehaves.
-- [ ] **`--selftest`** — inject controlled timestamps: a short space press auditions and
+- [x] **`--selftest`** — inject controlled timestamps: a short space press auditions and
   **keeps** the staged chord; a long space press fires and **clears** it.
-- [ ] Run `main.py --selftest` (piano + sine) + `tools/run_spike_tests.py`; update spike
+- [x] Run `main.py --selftest` (piano + sine) + `tools/run_spike_tests.py`; update spike
   README controls + `status_active.md`.
 
 ## Open design questions (confirm before building)

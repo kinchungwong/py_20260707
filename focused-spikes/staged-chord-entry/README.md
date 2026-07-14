@@ -30,7 +30,9 @@ chain headlessly and asserts a committed chord actually sounds and the HUD rende
 - **q** / **\** — slide the input window down / up one semitone (either mode). It re-aims
   *future* input only; notes already held or committed keep their pitch. All three octaves
   are drawn; the blue bar marks where your keys currently point.
-- **Space** (staged) — Play chord: fire the staged notes together, then clear.
+- **Space** (staged) — press-duration: a **short** tap **auditions** the staged chord (you
+  hear it; it stays staged); **holding** it plays + **clears**. Sound fires on press. (The
+  HUD **Play chord** button = play + clear.)
 - **z x c v b n m** (bottom row) — the **chord launcher**: press a key to fire the saved
   chord bound to it (either mode, at its saved pitch); **Shift+key** — forget that slot.
 - HUD buttons (mouse): **Play chord**, **Save chord** (binds the staged chord to the next

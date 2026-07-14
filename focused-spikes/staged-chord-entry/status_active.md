@@ -13,6 +13,11 @@
   Shift+key forgets. `layout.KeyZone` adds the row-delimited zone model. `--selftest` covers
   save→next-slot, both-mode fire, and forget. HUD shows a one-line slot readout — a fuller
   status area is deferred (see the task sidecar's known limitation).
+- **Press-duration primitive (2026-07-13)** — step 2. A reusable, clock-injectable
+  `PressTimer` (`press.py`) classifies key holds short vs long; wired to the staged-mode
+  space bar: short = audition (keeps staged), long = play + clear, with the sound firing on
+  KEYDOWN. Threshold `SPACE_LONG_S` (default 0.2 s) needs live tuning. `--selftest` covers
+  both branches via an injected clock. Liftable to `shared/` when the melody spike reuses it.
 
 Auditions use a lightweight `pygame.mixer` one-shot sine (`audition.py`) — a deliberate
 SECOND acoustic authority, taken on knowingly to keep the spike simple. It is kept behind
