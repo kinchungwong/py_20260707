@@ -20,6 +20,10 @@ than trying to make QWERTY a playable polyphonic surface.
 2. [`melody-editing-mode.md`](melody-editing-mode.md) — a **second** programming mode:
    hunt-and-peck base-note entry (press-duration), then a WYSIWYG mouse editor for
    per-note properties. Previously only a germ in the spike README "Finding".
+3. [`note-entry-shift-and-keyboard-geometry.md`](note-entry-shift-and-keyboard-geometry.md)
+   — the `q`/`\` semitone shift breaks the white/black row mnemonic; research pins the
+   terminology (diatonic transpose + circle-of-fifths vs. pitch bend) and opens the
+   keyboard-geometry question. Graduated one part into a speculation.
 
 ## Parking lot (raised, not resolved today)
 
