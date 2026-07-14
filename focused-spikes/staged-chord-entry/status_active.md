@@ -33,13 +33,27 @@
   pane refactor). `--selftest` asserts resolution: HUD button→action, HUD background→None,
   a staged-only button inert in live mode, white→midi, black-over-white order guard, and
   below-keyboard→None. Liftable to `shared/` when the melody spike (step 6) needs it.
+- **Mouse in staged mode (2026-07-14)** — step 4 (dependency **C**), the **last piece in
+  scope for this spike**. Fills step 3's `Region.KEYBOARD` seam: the mouse now drives the
+  piano keys in both modes via the `mouse_input` glissando drag model (one active mouse
+  note). **Live** = sustained play through the router (down = press, drag = glissando,
+  empty/up = off). **Staged** = audition on button-down, **stage on button-up iff the
+  gesture ends on the key it began on** (a drag away cancels; the down-audition is the
+  feedback); **Shift+click** toggles/forgets (auditions when it stages). Never `set_grab`;
+  focus-loss clears any in-flight gesture too. Launcher-slot clicking is **deferred to step
+  5 (F)** (Save/Play/Release stay on the HUD buttons). `--selftest` covers live glissando
+  (incl. drag-to-empty and back) and staged click-stage / drag-cancel / drag-out-and-back /
+  shift-toggle; piano + sine green, `run_spike_tests.py` 14/14, mypy + pyright clean. Sidecar:
+  **[`../../claude/tasks/mouse-in-staged.md`](../../claude/tasks/mouse-in-staged.md)**.
 - **Resting point (2026-07-14).** Chord launcher + press-duration are feel-evaluated
-  (positive verdict); the mouse hit-test core is built and selftest-green. Next mechanical
-  step: **step 4 (C) — mouse in staged mode** (wire the resolved keyboard/launcher hits to
-  action) — the **last work in scope for this spike**. Everything after C is a new spike:
-  **editing saved chords** (the stored-chord visibility / editing surface) is folded into
-  **UI pane modularization**, now sequenced as **plan step 5 (F)** between C and D, then
-  **melody mode (step 6, D)**. Per-key-type press-duration check on real hardware still open.
+  (positive verdict); the mouse hit-test core + mouse-in-staged (step 4, C) are built and
+  selftest-green. **C is code-complete and selftest-green but pending the human gate**
+  (manual test on a real device + manual review, then commit) per
+  [`../../claude/memory/process/c-review-and-merge-handoff.md`](../../claude/memory/process/c-review-and-merge-handoff.md).
+  With C done, this spike is complete; everything after is a new spike: **editing saved
+  chords** (the stored-chord visibility / editing surface) is folded into **UI pane
+  modularization**, sequenced as **plan step 5 (F)** between C and D, then **melody mode
+  (step 6, D)**. Per-key-type press-duration check on real hardware still open.
 
 Auditions use a lightweight `pygame.mixer` one-shot sine (`audition.py`) — a deliberate
 SECOND acoustic authority, taken on knowingly to keep the spike simple. It is kept behind
