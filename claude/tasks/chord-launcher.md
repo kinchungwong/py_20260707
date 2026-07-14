@@ -1,0 +1,67 @@
+# Task sidecar — chord launcher (plan step 1)
+
+Granular checklist for **step 1** of
+[`../plans/programming-modes-buildout.md`](../plans/programming-modes-buildout.md).
+Parent workstream: [`current.md`](current.md) → Active. All work lands in the existing
+spike `../../focused-spikes/staged-chord-entry/` (no edits to `src/`).
+
+## Scope (from the 2026-07-13 decisions)
+
+Generalize the single `Z` preset into **save-your-own chords over a `z–m` launcher zone**,
+firing in **both** live and staged modes, at **saved absolute pitch**. Demo stays
+**12-TET**; the note-window `q`/`\` shift is left **as-is** (redesign is parked). No config
+UI, no file load/save this round.
+
+## Checklist
+
+**Survey (grounding)**
+- [ ] Read how the current single-`Z` preset is stored, saved, fired, and forgotten across
+  `staged_app.py` / `hud.py` / `layout.py`; note where `Z` and the `z–m` keys are mapped
+  today (are `x c v b n m` currently note keys, HUD-only, or unmapped?).
+
+**Zone model (layout.py)**
+- [ ] Introduce a zone structure `{row, left_key, right_key, role}` resolved against each
+  row's key order; roles: `note-entry`, `launcher`.
+- [ ] Define the **default zoning**: home + upper rows = `note-entry` (the slidable window
+  maps here, unchanged); bottom row `z–m` = `launcher`.
+- [ ] Ensure `z–m` no longer act as note-entry keys (remove any prior note role on that row).
+
+**Saved-chord data model (staged_app.py)**
+- [ ] Replace the single-slot preset with a **slot map keyed by launcher key** (`z…m` → a
+  chord = set of midi notes), storing absolute pitches. Generalize the current `Z` storage.
+
+**Bind / forget gestures (staged mode)**
+- [ ] Build-a-chord → **Save** binds the staged chord to a chosen launcher key (press the
+  target key to pick the slot, or via the HUD). Overwrites if occupied (save-your-own).
+- [ ] **Shift + launcher key = forget** (reuse the existing "forget" gesture/word); a
+  forgotten slot is simply available again.
+
+**Fire (both modes)**
+- [ ] Pressing a bound launcher key fires its chord as fire-and-forget note-ons on the
+  `EventQueue` (`sounder_id = midi`, saved absolute pitch), in **live and staged** modes.
+  Empty slot = no-op. Focus-loss still all-notes-off (`../policy/input-policy.md`).
+
+**HUD**
+- [ ] Render the `z–m` slot strip: which are bound vs. empty; ideally the bound chord's
+  notes. Replace the single `Save chord → Z` affordance with the slot-targeted version.
+
+**Verify + document**
+- [ ] Extend `--selftest` (headless): bind a chord to a launcher key, fire it in **both**
+  modes and assert it sounds, then forget it and assert it's gone.
+- [ ] `.venv/bin/python tools/run_spike_tests.py` stays green; the spike's own selftest passes.
+- [ ] Update the spike `README.md` controls + `status_active.md` to describe the launcher
+  (supersede the single-`Z` description). Record any durable gotcha in `../memory/` before
+  checking items off.
+
+## Out of scope / do not touch
+
+- Note-window `q`/`\` shift redesign, pitch bend, keyboard geometry — parked
+  (`../speculations/isomorphic-hex-keyboard-geometry.md`).
+- On-the-fly chord transposition (b2), file load/save, zone-config UI, mouse-on-piano-keys
+  (that's plan steps 3–4), and melody mode (step 5).
+
+## Definition of done
+
+Multiple save-your-own chords bound across the `z–m` zone, each firing correctly in both
+live and staged modes at saved pitch, with bind + forget working; selftest + spike-test
+green; spike docs updated. Then re-evaluate feel (the spike's actual question).
