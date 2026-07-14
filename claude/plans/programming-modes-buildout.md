@@ -94,3 +94,13 @@ Remaining:
 Parked (own docs, not gating this plan): on-the-fly chord transpose gesture (b2);
 the note-window shift redesign / keyboard geometry
 (`../speculations/isomorphic-hex-keyboard-geometry.md`).
+
+## Deferred — needs planning + architecture review
+
+- **Stored-chord visibility surface** (surfaced by the 2026-07-13 chord-launcher eval): a
+  mini-map / display pane to see saved chords and *correct mistakes* (e.g. fix one wrong
+  note in a 6-note chord), which also subsumes the one-line-toast HUD limitation. Blocked on
+  a **UI-pane-modularization refactor** — the current spike UI wasn't designed for modular
+  panes — so it needs its own planning + architecture review before implementation. Overlaps
+  with the melody-editor's WYSIWYG (step 5), which also needs display panes; the refactor
+  should serve both. **Do not start without that review.**

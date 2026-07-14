@@ -21,8 +21,12 @@
   follow-ups recorded in the spike README "Finding" (2026-07-13): audition / press-duration
   per-key correctness, a **stored-chord visibility mini-map** (would also subsume the
   one-line-toast HUD limit), and a parked ~1.5 s staged-note-duration tweak.
-- **Next:** plan step 2 (press-duration primitive) — with the **visibility / display
-  surface** a strong near-term candidate given the eval.
+- **Next:** plan step 2 (press-duration primitive). Sidecar:
+  **[`press-duration.md`](press-duration.md)**.
+- **Deferred (needs planning + architecture review):** the stored-chord **visibility /
+  display surface** from the eval requires a UI-pane-modularization refactor (the spike UI
+  wasn't built for modular panes) — see the plan's "Deferred" section. Don't start it
+  without that review; it overlaps with the melody-editor WYSIWYG.
 
 **v1 decisions that still hold** (carry into the chord-launcher iteration): audition via
 the `pygame.mixer` one-shot sine behind `_audition()`; commit path = fire-and-forget
