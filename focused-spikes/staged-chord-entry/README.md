@@ -114,3 +114,26 @@ Some of the ideas listed here belong to future spikes; our next spike discussion
 sort out what stays and what gets pushed to the next.
 
 Look forward to evaluating again soon.
+
+### Human evaluation 2026-07-13 — chord launcher
+
+Evaluated the chord-launcher iteration (save-your-own chords across the `z–m` zone; Save
+auto-picks the next empty slot; a launcher key fires its chord in both modes at saved pitch;
+Shift+key forgets). Code tested headlessly (selftest green, piano + sine) and in a live
+session.
+
+- **Core question:** it starts to feel like it can play some *interesting chords* — a
+  promising sign that one-key-to-many pulls this away from "programming".
+- **Audition (staged mode) needs more work.** When short-vs-long press lands (the
+  press-duration primitive, plan step 2), we'll need to verify it behaves correctly for
+  *each type* of keyboard key — behaviour may differ from key to key.
+- **Firing in both modes:** forgot to test this round — revisit next time.
+- **Visibility of stored chords is the main gap.** Eventually we need a **mini-map / display
+  surface** for the saved chords so *correcting mistakes* is easy: e.g. a 6-note chord with
+  one wrong note currently takes real memory and effort to fix. A proper display area would
+  also subsume the one-line-toast HUD limitation.
+- **Parked tweak (fine-tune later, not urgent):** shorten the full note duration in staged
+  mode to ~1.5 s.
+
+Overall: the core mechanic feels right; the next pressures are audition / press-duration
+correctness and on-screen visibility for editing.
