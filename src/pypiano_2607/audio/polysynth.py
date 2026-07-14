@@ -52,6 +52,7 @@ class PolySynth:
 
     def handle(self, ev: NoteEvent) -> None:
         if ev.kind is NoteKind.ON:
+            assert ev.freq is not None, "ON events always carry a frequency"
             i = self._alloc(ev.sounder_id)
             self.voices[i].note_on(ev.freq)             # retune + gate attack (Hz directly)
             self.voice_sounder[i] = ev.sounder_id
