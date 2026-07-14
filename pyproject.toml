@@ -9,6 +9,12 @@ description = "Interactive piano synthesis (promoted from spikes)"
 requires-python = ">=3.13"
 dependencies = ["numpy", "sounddevice", "pygame", "sortedcontainers", "cffi"]
 
+[project.optional-dependencies]
+# Dev/test toolchain — declares intent; exact pins live in requirements.txt. Install directly
+# (`pip install pytest mypy pyright`), NOT via `-e .`: the library is run from src/ on sys.path
+# (shared/bootstrap.py), never pip-installed. See requirements.txt.
+dev = ["pytest", "mypy", "pyright"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
@@ -19,3 +25,31 @@ markers = [
     "perf: machine-dependent timing assertions (deselected by default)",
     "slow: threaded / longer-running tests",
 ]
+
+# --- type checking ----------------------------------------------------------------------
+# The library (src/) is a package; the active spike is a set of FLAT modules resolved at
+# runtime via sys.path (shared/bootstrap.py). Both checkers get src + the spike dir on their
+# path so those imports resolve without running the bootstrap. Baseline is deliberately
+# pragmatic (not strict) for a spike-driven repo. sounddevice ships no stubs -> silence only
+# that import, nothing broader.
+[tool.mypy]
+python_version = "3.13"
+# Roots for the repo's runtime-sys.path imports: src (library), the spike dir (its flat
+# modules), focused-spikes (so `shared.bootstrap` resolves), tools (sibling `_repo`).
+mypy_path = ["src", "focused-spikes/staged-chord-entry", "focused-spikes", "tools"]
+explicit_package_bases = true
+files = ["src", "focused-spikes/staged-chord-entry", "tools"]
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "sounddevice"          # ships no stubs / py.typed marker — silence only this import
+ignore_missing_imports = true
+
+[tool.pyright]
+venvPath = "."                  # resolve numpy/pygame/etc. from the project venv
+venv = ".venv"
+include = ["src", "focused-spikes/staged-chord-entry", "tools"]
+extraPaths = ["src", "focused-spikes/staged-chord-entry", "focused-spikes", "tools"]
+pythonVersion = "3.13"
+typeCheckingMode = "basic"
