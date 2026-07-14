@@ -15,9 +15,18 @@ UI, no file load/save this round.
 ## Checklist
 
 **Survey (grounding)**
-- [ ] Read how the current single-`Z` preset is stored, saved, fired, and forgotten across
-  `staged_app.py` / `hud.py` / `layout.py`; note where `Z` and the `z–m` keys are mapped
-  today (are `x c v b n m` currently note keys, HUD-only, or unmapped?).
+- [x] Read how the current single-`Z` preset is stored, saved, fired, forgotten
+  (2026-07-13). Findings: preset = `self.preset: list[int] | None` (`staged_app.py:82`),
+  key `_z_key` (`:71`); fire/forget in `dispatch` (`:222–224`) sits **before** the mode
+  branch, so `Z` **already fires in both modes**, at **saved absolute pitch** via `_fire`
+  (`:94–101`) — b1 already holds. `Save` (`_save_chord :165–173`) is **HUD-mouse-only**,
+  hardwired to `Z`. Key map (`layout.py:62–65`) = home + upper rows only; **bottom row
+  `x c v b n m` is UNMAPPED, `z` is the sole bottom-row key** → the `z–m` launcher zone is
+  essentially free, no collision with note entry. So step 1 is mostly: generalize the one
+  slot → a `z…m`-keyed map, and widen the `_z_key` special-case to the whole zone.
+- [ ] **Design micro-point (decide at build):** how to pick which slot to bind — "Save then
+  press a `z–m` key" (transient await-target state) vs. "Save → next empty slot". Save is
+  currently mouse-only + hardwired to `Z`.
 
 **Zone model (layout.py)**
 - [ ] Introduce a zone structure `{row, left_key, right_key, role}` resolved against each
@@ -44,6 +53,10 @@ UI, no file load/save this round.
 **HUD**
 - [ ] Render the `z–m` slot strip: which are bound vs. empty; ideally the bound chord's
   notes. Replace the single `Save chord → Z` affordance with the slot-targeted version.
+  - **Known limitation (deferred):** the HUD today has only ONE toast-style `hint` line
+    (`hud.py:102`) + one `Z:` line (`:98`) at fixed y-positions in a 200px strip —
+    insufficient to show a whole row of 7 launcher slots + status. A HUD layout rework is
+    needed; for step 1 do the minimum slot readout and revisit the fuller status area later.
 
 **Verify + document**
 - [ ] Extend `--selftest` (headless): bind a chord to a launcher key, fire it in **both**
