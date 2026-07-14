@@ -24,6 +24,11 @@ for code that only wants the geometry.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:                       # pygame is imported lazily inside the draw/build
+    import pygame                       # functions; this makes the `pygame.Rect` annotations
+                                        # resolve for type checkers without a runtime import.
 
 # --- geometry ----------------------------------------------------------------
 

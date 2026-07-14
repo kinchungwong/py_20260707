@@ -14,8 +14,8 @@ def repo_root(start: str | None = None) -> str:
     directory. The project always lives well below $HOME, so a real root is found
     first; reaching $HOME means `.venv/` is missing, and we fail there rather than
     roam the filesystem (and never mistake a stray `~/.venv` for the repo root)."""
-    home = os.path.expanduser("~")
-    home = os.path.abspath(home) if home != "~" else None   # None if HOME unresolved
+    home_raw = os.path.expanduser("~")                      # str; "~" if HOME unresolved
+    home = os.path.abspath(home_raw) if home_raw != "~" else None   # str | None
     d = os.path.abspath(start or os.path.dirname(__file__))
     while True:
         if home is not None and d == home:
