@@ -14,9 +14,12 @@ UI, no file load/save this round.
 
 ## Status
 
-**Code complete + selftest green (2026-07-13).** All mechanical items below are done;
-what remains is the **human feel-evaluation** (the spike's actual question) — play it and
-record the finding. Bind gesture built = **Save → next empty slot** (per the decision).
+**Done — code complete, selftest green, and feel-evaluated (2026-07-13).** The core
+mechanic feels right ("interesting chords"). Follow-ups from the eval (audition /
+press-duration per-key correctness, a stored-chord **visibility mini-map**, a parked ~1.5 s
+staged-note-duration tweak) live in the spike README "Finding". Bind gesture built =
+**Save → next empty slot** (per the decision). Next workstream: plan step 2 (press-duration)
+and/or the visibility surface.
 
 ## Checklist
 

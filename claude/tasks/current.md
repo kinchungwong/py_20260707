@@ -10,15 +10,19 @@
 [`../../focused-spikes/staged-chord-entry/README.md`](../../focused-spikes/staged-chord-entry/README.md)
 · status: [`status_active.md`](../../focused-spikes/staged-chord-entry/status_active.md).
 
-- **v1 (the minimal `Z`-slice) is delivered and human-tested** — the 2026-07-11 eval
-  (commit `18b5ae76`) plus the 3-octave/slidable-window follow-up (`010450e`). The eval's
-  feedback and a further round of use produced a design direction, now captured in the
-  2026-07-13 discussion and an **Active** plan:
-  [`../plans/programming-modes-buildout.md`](../plans/programming-modes-buildout.md).
-- **Next iteration = step 1 of that plan: the chord launcher.** Generalize the single `Z`
-  preset into **save-your-own chords over a `z–m` launcher zone**, firing in both live and
-  staged modes, at saved absolute pitch; demo stays 12-TET. Granular checklist in the
-  sidecar: **[`chord-launcher.md`](chord-launcher.md)**.
+- **v1 (the minimal `Z`-slice) is delivered and human-tested** — the 2026-07-11 eval plus
+  the 3-octave / slidable-window follow-up. The eval's feedback and a further round of use
+  produced a design direction, now captured in the 2026-07-13 discussion and an **Active**
+  plan: [`../plans/programming-modes-buildout.md`](../plans/programming-modes-buildout.md).
+- **Step 1 (chord launcher) is built and feel-evaluated** — save-your-own chords across the
+  `z–m` zone (Save → next empty slot; fires in both modes at saved pitch; Shift+key forgets).
+  Tested headlessly (selftest green, piano + sine) and in a live session; the core mechanic
+  feels right. Granular checklist: **[`chord-launcher.md`](chord-launcher.md)**. Eval
+  follow-ups recorded in the spike README "Finding" (2026-07-13): audition / press-duration
+  per-key correctness, a **stored-chord visibility mini-map** (would also subsume the
+  one-line-toast HUD limit), and a parked ~1.5 s staged-note-duration tweak.
+- **Next:** plan step 2 (press-duration primitive) — with the **visibility / display
+  surface** a strong near-term candidate given the eval.
 
 **v1 decisions that still hold** (carry into the chord-launcher iteration): audition via
 the `pygame.mixer` one-shot sine behind `_audition()`; commit path = fire-and-forget
