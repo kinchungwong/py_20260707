@@ -12,6 +12,12 @@ firing in **both** live and staged modes, at **saved absolute pitch**. Demo stay
 **12-TET**; the note-window `q`/`\` shift is left **as-is** (redesign is parked). No config
 UI, no file load/save this round.
 
+## Status
+
+**Code complete + selftest green (2026-07-13).** All mechanical items below are done;
+what remains is the **human feel-evaluation** (the spike's actual question) — play it and
+record the finding. Bind gesture built = **Save → next empty slot** (per the decision).
+
 ## Checklist
 
 **Survey (grounding)**
@@ -24,34 +30,34 @@ UI, no file load/save this round.
   `x c v b n m` is UNMAPPED, `z` is the sole bottom-row key** → the `z–m` launcher zone is
   essentially free, no collision with note entry. So step 1 is mostly: generalize the one
   slot → a `z…m`-keyed map, and widen the `_z_key` special-case to the whole zone.
-- [ ] **Design micro-point (decide at build):** how to pick which slot to bind — "Save then
+- [x] **Design micro-point (decide at build):** how to pick which slot to bind — "Save then
   press a `z–m` key" (transient await-target state) vs. "Save → next empty slot". Save is
   currently mouse-only + hardwired to `Z`.
 
 **Zone model (layout.py)**
-- [ ] Introduce a zone structure `{row, left_key, right_key, role}` resolved against each
+- [x] Introduce a zone structure `{row, left_key, right_key, role}` resolved against each
   row's key order; roles: `note-entry`, `launcher`.
-- [ ] Define the **default zoning**: home + upper rows = `note-entry` (the slidable window
+- [x] Define the **default zoning**: home + upper rows = `note-entry` (the slidable window
   maps here, unchanged); bottom row `z–m` = `launcher`.
-- [ ] Ensure `z–m` no longer act as note-entry keys (remove any prior note role on that row).
+- [x] Ensure `z–m` no longer act as note-entry keys (remove any prior note role on that row).
 
 **Saved-chord data model (staged_app.py)**
-- [ ] Replace the single-slot preset with a **slot map keyed by launcher key** (`z…m` → a
+- [x] Replace the single-slot preset with a **slot map keyed by launcher key** (`z…m` → a
   chord = set of midi notes), storing absolute pitches. Generalize the current `Z` storage.
 
 **Bind / forget gestures (staged mode)**
-- [ ] Build-a-chord → **Save** binds the staged chord to a chosen launcher key (press the
+- [x] Build-a-chord → **Save** binds the staged chord to a chosen launcher key (press the
   target key to pick the slot, or via the HUD). Overwrites if occupied (save-your-own).
-- [ ] **Shift + launcher key = forget** (reuse the existing "forget" gesture/word); a
+- [x] **Shift + launcher key = forget** (reuse the existing "forget" gesture/word); a
   forgotten slot is simply available again.
 
 **Fire (both modes)**
-- [ ] Pressing a bound launcher key fires its chord as fire-and-forget note-ons on the
+- [x] Pressing a bound launcher key fires its chord as fire-and-forget note-ons on the
   `EventQueue` (`sounder_id = midi`, saved absolute pitch), in **live and staged** modes.
   Empty slot = no-op. Focus-loss still all-notes-off (`../policy/input-policy.md`).
 
 **HUD**
-- [ ] Render the `z–m` slot strip: which are bound vs. empty; ideally the bound chord's
+- [x] Render the `z–m` slot strip: which are bound vs. empty; ideally the bound chord's
   notes. Replace the single `Save chord → Z` affordance with the slot-targeted version.
   - **Known limitation (deferred):** the HUD today has only ONE toast-style `hint` line
     (`hud.py:102`) + one `Z:` line (`:98`) at fixed y-positions in a 200px strip —
@@ -59,10 +65,10 @@ UI, no file load/save this round.
     needed; for step 1 do the minimum slot readout and revisit the fuller status area later.
 
 **Verify + document**
-- [ ] Extend `--selftest` (headless): bind a chord to a launcher key, fire it in **both**
+- [x] Extend `--selftest` (headless): bind a chord to a launcher key, fire it in **both**
   modes and assert it sounds, then forget it and assert it's gone.
-- [ ] `.venv/bin/python tools/run_spike_tests.py` stays green; the spike's own selftest passes.
-- [ ] Update the spike `README.md` controls + `status_active.md` to describe the launcher
+- [x] `.venv/bin/python tools/run_spike_tests.py` stays green; the spike's own selftest passes.
+- [x] Update the spike `README.md` controls + `status_active.md` to describe the launcher
   (supersede the single-`Z` description). Record any durable gotcha in `../memory/` before
   checking items off.
 

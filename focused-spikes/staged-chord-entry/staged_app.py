@@ -6,8 +6,9 @@ src/ and does NOT subclass PianoApp (whose dispatch/__init__ aren't extension po
 it is a parallel shell that reuses the components.
 
 Design decisions baked in (all "spike-simple"; see README.md / status_active.md):
-  * feel-test slice, the sketch's shape only; ONE preset slot (key Z); keyboard-first
-    (mouse drives only the HUD buttons, not the piano keys).
+  * chord launcher: save-your-own chords bound to the bottom-row z..m zone (Save auto-picks
+    the next empty slot); a launcher key fires its chord in BOTH modes at saved pitch.
+    Mouse drives only the HUD buttons, not the piano keys (v1 scope).
   * input surface: a 3-octave keyboard with the computer keys mapped to a slidable window
     over it (layout.InputWindow); q/\\ slide it a semitone, re-aiming future input only, so a
     held note keeps its pitch (_held_key_midi releases the pitch pressed, not the new target,
@@ -68,7 +69,7 @@ class StagedApp:
 
         # spike UI
         self.hud = hud.Hud(WIN_W, HUD_H, MARGIN)
-        self._z_key = pygame.key.key_code("z")
+        self.launcher = layout.default_launcher_zone()     # bottom row z..m -> chord slots
         self._shift_down_key = pygame.key.key_code("q")    # slide the input window down/up
         self._shift_up_key = pygame.key.key_code("\\")
         self.audition = Audition(range(layout.MIN_MIDI, layout.MAX_MIDI + 1), sr=SR)
@@ -79,7 +80,7 @@ class StagedApp:
         # state
         self.mode = "live"                                 # 'live' | 'staged'
         self.staged: list[int] = []                        # pending midi, ordered
-        self.preset: list[int] | None = None               # the single Z slot
+        self.slots: list[list[int] | None] = [None] * len(self.launcher)  # z..m chord slots
         self._flash: dict[int, int] = {}                   # midi -> expiry (ticks ms)
         self._ringing: set[int] = set()                    # committed ids w/ no natural off
         self._held_key_midi: dict[int, int] = {}           # live keycode -> midi it pressed
@@ -165,29 +166,34 @@ class StagedApp:
     def _save_chord(self) -> None:
         if not self.staged:
             return
-        if self.preset is not None:
-            self.hint = "Preset Z is full - shift+Z to forget it first."
+        try:
+            idx = self.slots.index(None)                   # next empty slot (auto-pick)
+        except ValueError:
+            self.hint = "Launcher full - shift+key to forget a slot first."
             return
-        self.preset = list(self.staged)
-        self.hint = "Saved to Z:  " + "  ·  ".join(note_name(m) for m in self.preset)
+        self.slots[idx] = list(self.staged)
+        self.hint = (f"Saved to {self.launcher.char(idx)}:  "
+                     + "  ·  ".join(note_name(m) for m in self.slots[idx]))
         self.staged.clear()
 
     def _release_staged(self) -> None:
         self.staged.clear()
         self.hint = "Released the pending chord."
 
-    def _preset_fire(self) -> None:
-        if not self.preset:
-            self.hint = "Z is empty - stage a chord and Save it first."
+    def _launcher_fire(self, slot: int) -> None:
+        chord = self.slots[slot]
+        if not chord:
+            self.hint = f"{self.launcher.char(slot)} is empty - stage a chord and Save it first."
             return
-        for midi in self.preset:
+        for midi in chord:
             self._fire(midi)
-        self.hint = "Z fired:  " + "  ·  ".join(note_name(m) for m in self.preset)
+        self.hint = (f"{self.launcher.char(slot)} fired:  "
+                     + "  ·  ".join(note_name(m) for m in chord))
 
-    def _preset_forget(self) -> None:
-        if self.preset is not None:
-            self.preset = None
-            self.hint = "Forgot the chord on Z."
+    def _launcher_forget(self, slot: int) -> None:
+        if self.slots[slot] is not None:
+            self.slots[slot] = None
+            self.hint = f"Forgot the chord on {self.launcher.char(slot)}."
 
     def _hud_action(self, action: str) -> None:
         if action == "mode":      self._toggle_mode()
@@ -219,8 +225,9 @@ class StagedApp:
                 self._shift_window(+1)
                 return True
             shift = bool(event.mod & pygame.KMOD_SHIFT)
-            if event.key == self._z_key:                   # preset: fire / (shift) forget
-                self._preset_forget() if shift else self._preset_fire()
+            slot = self.launcher.slot_of(event.key)        # launcher zone: fire / (shift) forget
+            if slot is not None:
+                self._launcher_forget(slot) if shift else self._launcher_fire(slot)
                 return True
             if self.mode == "staged" and event.key == pygame.K_SPACE:
                 self._play_chord()
@@ -266,12 +273,15 @@ class StagedApp:
     def render(self) -> None:
         self.screen.fill(hud.BG)
         staged_names = [note_name(m) for m in self.staged]
-        preset_names = [note_name(m) for m in self.preset] if self.preset else None
+        slot_labels = [(self.launcher.char(i),
+                        [note_name(m) for m in chord] if chord else None)
+                       for i, chord in enumerate(self.slots)]
+        slots_full = all(c is not None for c in self.slots)
         lo, hi = self.window.span
         window_label = f"keys {note_name(lo)}-{note_name(hi)}  (q/\\ shift {self.window.offset:+d})"
         self.hud.draw(self.screen, mode=self.mode, staged_names=staged_names,
-                      preset_names=preset_names, tuning_label=self.tuning_label,
-                      hint=self.hint, window_label=window_label)
+                      slot_labels=slot_labels, slots_full=slots_full,
+                      tuning_label=self.tuning_label, hint=self.hint, window_label=window_label)
         hud.draw_keyboard(
             self.screen, self.wk, self.bk,
             held=self.router.held, staged=set(self.staged), flashing=self._flashing(),

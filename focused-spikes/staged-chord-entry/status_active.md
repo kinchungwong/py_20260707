@@ -4,7 +4,15 @@
 - Origin design: `claude/ui-designs/staged-chord-entry-hud.md`
   (from `claude/discussions/2026-07-10/keyboard-and-input-surface.md`).
 
-## Named debt — consolidate at graduation
+## Progress
+
+- **Chord launcher implemented (2026-07-13)** — step 1 of
+  `../../claude/plans/programming-modes-buildout.md`. The single `Z` preset is generalized
+  into save-your-own chords across the bottom-row `z..m` launcher zone: Save auto-picks the
+  next empty slot; a launcher key fires its chord in **both** modes at saved absolute pitch;
+  Shift+key forgets. `layout.KeyZone` adds the row-delimited zone model. `--selftest` covers
+  save→next-slot, both-mode fire, and forget. HUD shows a one-line slot readout — a fuller
+  status area is deferred (see the task sidecar's known limitation).
 
 Auditions use a lightweight `pygame.mixer` one-shot sine (`audition.py`) — a deliberate
 SECOND acoustic authority, taken on knowingly to keep the spike simple. It is kept behind

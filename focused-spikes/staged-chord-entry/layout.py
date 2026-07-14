@@ -104,3 +104,53 @@ class InputWindow:
         """midi -> (KEYCHAR, note_name) for every currently-bound key, for the painter."""
         return {ANCHOR_MIDI + s + self.offset: (ch.upper(), note_name(ANCHOR_MIDI + s + self.offset))
                 for ch, s in _LAYOUT}
+
+
+# --- row-delimited key zones ------------------------------------------------------------
+# Zones organize the computer keyboard BY ROW, each delimited by a leftmost/rightmost key
+# (e.g. "bottom row, z..m"). v1 uses a single launcher zone; the structure lives here so
+# future zones (and eventual reconfiguration) are data, not a rewrite. Rows are the letter
+# portion of a QWERTY board, left-to-right.
+_ROWS = {
+    "number": list("1234567890-="),
+    "upper":  list("qwertyuiop"),
+    "home":   list("asdfghjkl;'"),
+    "bottom": list("zxcvbnm,./"),
+}
+
+
+def _row_span(row: str, left: str, right: str) -> list[str]:
+    """The contiguous run of key chars in `row` from `left` to `right`, inclusive."""
+    keys = _ROWS[row]
+    i, j = keys.index(left), keys.index(right)
+    if i > j:
+        i, j = j, i
+    return keys[i:j + 1]
+
+
+class KeyZone:
+    """A contiguous run of keys within ONE physical keyboard row, delimited by its leftmost
+    and rightmost key char and tagged with a role. Resolves computer keycodes to 0-based slot
+    indices within the zone. (v1 has one launcher zone; the model generalizes.)"""
+
+    def __init__(self, row: str, left: str, right: str, role: str):
+        self.row, self.role = row, role
+        self.chars = _row_span(row, left, right)
+        self.keycodes = [pygame.key.key_code(c) for c in self.chars]
+        self._slot = {kc: i for i, kc in enumerate(self.keycodes)}
+
+    def slot_of(self, keycode) -> int | None:
+        """0-based slot index of this keycode within the zone, or None if outside it."""
+        return self._slot.get(keycode)
+
+    def char(self, slot: int) -> str:
+        """Upper-case key char for a slot index (for labels/hints)."""
+        return self.chars[slot].upper()
+
+    def __len__(self) -> int:
+        return len(self.keycodes)
+
+
+def default_launcher_zone() -> KeyZone:
+    """The default launcher zone: the bottom row from z to m inclusive (7 slots)."""
+    return KeyZone("bottom", "z", "m", "launcher")

@@ -31,16 +31,19 @@ chain headlessly and asserts a committed chord actually sounds and the HUD rende
   *future* input only; notes already held or committed keep their pitch. All three octaves
   are drawn; the blue bar marks where your keys currently point.
 - **Space** (staged) — Play chord: fire the staged notes together, then clear.
-- **Z** — fire the saved preset (either mode); **Shift+Z** — forget it.
-- HUD buttons (mouse): **Play chord**, **Save chord -> Z**, **Release**.
+- **z x c v b n m** (bottom row) — the **chord launcher**: press a key to fire the saved
+  chord bound to it (either mode, at its saved pitch); **Shift+key** — forget that slot.
+- HUD buttons (mouse): **Play chord**, **Save chord** (binds the staged chord to the next
+  empty launcher slot), **Release**.
 - **Esc** / close window — quit. (Note: **q** shifts the window; it does **not** quit.)
 
 Keyboard-first: the mouse drives only the HUD buttons, not the piano keys (v1 scope).
 
 ## What's baked in (spike-simple — the pinned decisions)
 
-- **Feel-test slice, the sketch's shape only**: persistent live⇄staged toggle + explicit
-  Play-chord commit; ONE preset slot (`Z`); no quasimode / timeout comparison this round.
+- **Feel-test slice + chord launcher**: persistent live⇄staged toggle + explicit Play-chord
+  commit; **save-your-own chords across the bottom-row `z..m` launcher zone** (Save auto-picks
+  the next empty slot; fires in both modes at saved pitch); no quasimode / timeout this round.
 - **Input surface**: a 3-octave keyboard; the computer keys map to a slidable ~1.4-octave
   window over it (`layout.InputWindow`), moved a semitone at a time by `q`/`\` — the slide
   re-aims future input only, held/committed notes keep their pitch. (Added after the
