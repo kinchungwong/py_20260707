@@ -46,6 +46,10 @@ controller — possibly the first real velocity path in the project.
 
 ## Open questions
 
+*Resolved 2026-07-13: this is a **separate new spike** (it needs a bar/timeline display
+pane + a details text area — a whole UI surface). Timing model (below) is deferred until
+that spike starts. See [`../../plans/programming-modes-buildout.md`](../../plans/programming-modes-buildout.md).*
+
 - **Is this a separate spike** from staged-chord-entry, or an extension of it? (It shares
   audition + press-duration + mouse machinery but has a very different surface.)
 - **Timing model**: are base notes placed on a grid/transport, or free, with timing set
