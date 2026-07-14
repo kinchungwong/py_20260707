@@ -1,9 +1,10 @@
 # Plan: programming-modes buildout
 
 **Status: Active** (2026-07-13; updated 2026-07-14). Sequences the work coming out of the
-2026-07-13 discussion (`../discussions/2026-07-13/`). **Steps 1–3 are built and
-selftest-green** (chord launcher, press-duration, mouse hit-test core). **Step 4 (C) is the
-next work and the last piece in scope for the current `staged-chord-entry` spike**;
+2026-07-13 discussion (`../discussions/2026-07-13/`). **Steps 1–4 are built and
+selftest-green** (chord launcher, press-duration, mouse hit-test core, mouse in staged mode).
+Step 4 (C) is the last piece in scope for the current `staged-chord-entry` spike and is pending the human gate;
+everything after C is a **new spike** (see "Scope boundary").
 everything after C is a **new spike** (see "Scope boundary"). Decomposed into `../tasks/`
 (chord-launcher, press-duration, mouse-hit-test). Only the melody-spike-scoped Q4 stays open.
 
