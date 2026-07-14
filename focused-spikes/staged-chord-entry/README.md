@@ -140,3 +140,17 @@ session.
 
 Overall: the core mechanic feels right; the next pressures are audition / press-duration
 correctness and on-screen visibility for editing.
+
+### Human evaluation 2026-07-13 — press-duration (space + note keys)
+
+Evaluated the short/long press idiom on both the space bar and staged note keys (short =
+trial/audition, long = commit): note keys tap = audition-only / hold = stage; space short =
+audition the chord (kept) / long = play + clear.
+
+- **Verdict: good enough — nothing to complain about.** Tap-to-trial / hold-to-stage and the
+  short/long space both read naturally; the 0.20 s threshold felt fine. "Short = audition" is
+  a keeper as a consistent gesture across the interface.
+- **Next thing awaited before deeper evaluation:** **editing saved chords** — the stored-chord
+  visibility / editing surface (deferred; needs a UI-pane-modularization refactor +
+  architecture review). Until you can correct a chord in place, the spike is at a natural
+  resting point. Pausing here.

@@ -21,6 +21,11 @@
   when the melody spike reuses it. **Extended to staged NOTE keys** (user feedback): a short
   tap auditions only, a long hold auditions + stages — one idiom (short = trial, long =
   commit) across the trial→record flow.
+- **Resting point (2026-07-13).** Chord launcher + press-duration are feel-evaluated and the
+  user's verdict is positive. Next awaited feature: **editing saved chords** (the visibility /
+  editing surface), deferred pending a UI-pane-modularization refactor + architecture review.
+  Next mechanical step: plan step 3 (mouse hit-test core). Per-key-type press-duration check
+  on real hardware still open.
 
 Auditions use a lightweight `pygame.mixer` one-shot sine (`audition.py`) — a deliberate
 SECOND acoustic authority, taken on knowingly to keep the spike simple. It is kept behind
