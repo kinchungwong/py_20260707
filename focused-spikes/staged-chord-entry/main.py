@@ -71,6 +71,15 @@ def _selftest(voice, tuning, label) -> None:
         def click(pos):
             app.dispatch(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=pos, button=1))
 
+        def mdown(pos, mod=0):                          # left-button press (mod injects Shift)
+            app.dispatch(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=pos, button=1, mod=mod))
+
+        def mmove(pos):                                 # drag (button held)
+            app.dispatch(pygame.event.Event(pygame.MOUSEMOTION, pos=pos))
+
+        def mup(pos):                                   # left-button release
+            app.dispatch(pygame.event.Event(pygame.MOUSEBUTTONUP, pos=pos, button=1))
+
         def ku_key(key):
             app.dispatch(pygame.event.Event(pygame.KEYUP, key=key))
 
@@ -100,6 +109,24 @@ def _selftest(voice, tuning, label) -> None:
         ku("a")
         drive(40)
         assert app.synth.active_count() == 0
+
+        # mouse (step 4) in LIVE mode: the mouse_input glissando model over the router.
+        # down = press; drag onto another key = off-old/on-new; drag to empty = off; up = off.
+        # (Midis come from the keys themselves -- this 3-octave keyboard starts below C4.)
+        w0, b0 = app.wk[0], app.bk[0]                  # a white key and a black key (distinct midis)
+        mdown(w0.rect.center)
+        assert app.router.held == {w0.midi}, app.router.held
+        assert drive(6) > 0.0, "mouse-pressed live note produced no sound"
+        mmove(b0.rect.center)                          # glissando onto the black key
+        assert app.router.held == {b0.midi}, app.router.held
+        mmove((w0.rect.centerx, scr_h - 3))            # drag into the empty bottom margin -> off
+        assert app.router.held == set(), app.router.held
+        mmove(w0.rect.center)                          # drag back onto a key -> on again
+        assert app.router.held == {w0.midi}, app.router.held
+        mup(w0.rect.center)                            # release -> off
+        assert app.router.held == set(), app.router.held
+        drive(40)
+        assert app.synth.active_count() == 0, "mouse live note stuck after release"
 
         # input window: q/\ re-aim future input; the clamp keeps it on-screen
         assert app.window.offset == 0
@@ -174,6 +201,25 @@ def _selftest(voice, tuning, label) -> None:
         assert app.staged == [], "long space press must clear the staged chord"
         assert drive(6) > 0.0, "long space press produced no sound"
 
+        # mouse (step 4) in STAGED mode: audition on button-DOWN, stage on button-UP only if
+        # the gesture ends on the key it began on; a drag away cancels; Shift+click toggles.
+        assert app.staged == []
+        k0, k1, kb = app.wk[0], app.wk[1], app.bk[0]   # two whites + a black (distinct midis)
+        mdown(k0.rect.center)
+        assert app.staged == [], "staged mouse must not stage on button-down"
+        mup(k0.rect.center)                            # clean click (down==up key) -> stage
+        assert app.staged == [k0.midi], app.staged
+        mdown(k1.rect.center); mmove(kb.rect.center); mup(kb.rect.center)   # drag away -> no stage
+        assert app.staged == [k0.midi], "a drag-away click must not stage"
+        mdown(k1.rect.center); mmove(kb.rect.center)   # drag out...
+        mmove(k1.rect.center); mup(k1.rect.center)     # ...and back to the down-key -> stage
+        assert app.staged == [k0.midi, k1.midi], app.staged
+        mdown(k0.rect.center, mod=pygame.KMOD_SHIFT); mup(k0.rect.center)   # Shift+click un-stages
+        assert app.staged == [k1.midi], app.staged
+        mdown(kb.rect.center, mod=pygame.KMOD_SHIFT); mup(kb.rect.center)   # Shift+click stages one
+        assert app.staged == [k1.midi, kb.midi], app.staged
+        app.staged.clear()
+
         # Shift+note un-stages (immediate); then stage + Save -> next empty launcher slot (z)
         hold("s")                                       # stage D4
         assert app.staged == [62], app.staged
@@ -214,7 +260,8 @@ def _selftest(voice, tuning, label) -> None:
         special(pygame.key.key_code("z"))
         assert drive(6) == 0.0 and app.synth.active_count() == 0, "forgotten slot still fires"
 
-        print(f"selftest OK ({voice}, {label}): live hold; staged note tap=audition/hold=stage, "
+        print(f"selftest OK ({voice}, {label}): live hold; mouse live glissando + staged "
+              f"click-stages/drag-cancels/shift-toggles; staged note tap=audition/hold=stage, "
               f"space short=audition/long=play+clear (peak {peak:.3f}); save->next launcher slot, "
               "launcher fires both modes, forget clears a slot, focus-loss all-off, HUD renders. "
               "No device opened.")

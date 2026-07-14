@@ -8,7 +8,11 @@ it is a parallel shell that reuses the components.
 Design decisions baked in (all "spike-simple"; see README.md / status_active.md):
   * chord launcher: save-your-own chords bound to the bottom-row z..m zone (Save auto-picks
     the next empty slot); a launcher key fires its chord in BOTH modes at saved pitch.
-    Mouse drives only the HUD buttons, not the piano keys (v1 scope).
+  * mouse (step 4): first-class on the piano keys via the coarse-to-fine hit-test. Live mode
+    = sustained glissando through the router (the mouse_input drag model). Staged mode =
+    audition on button-down, stage on button-up iff the gesture ends on the key it began on
+    (a drag away cancels it); Shift+click toggles/forgets. Never `set_grab` (no-grab policy;
+    focus-loss = all-off). Launcher-slot clicking is deferred to the pane-refactor spike (F).
   * input surface: a 3-octave keyboard with the computer keys mapped to a slidable window
     over it (layout.InputWindow); q/\\ slide it a semitone, re-aiming future input only, so a
     held note keeps its pitch (_held_key_midi releases the pitch pressed, not the new target,
@@ -102,6 +106,12 @@ class StagedApp:
         self._ringing: set[int] = set()                    # committed ids w/ no natural off
         self._held_key_midi: dict[int, int] = {}           # live keycode -> midi it pressed
         self._press_midi: dict[int, int] = {}              # staged plain-press keycode -> auditioned midi
+        # mouse-on-keyboard drag state (step 4). One active mouse note at a time, following
+        # the cursor (the mouse_input glissando model). `_mouse_down_midi` is the key the
+        # gesture STARTED on -- staged mode stages on button-up only if it ends on that key.
+        self._mouse_active = False                         # a keyboard mouse-gesture is in progress
+        self._mouse_note: int | None = None                # key under the cursor now (sustained in live)
+        self._mouse_down_midi: int | None = None           # key the gesture began on (staged up-stage test)
         self.hint = "Live mode. Tab to enter staged entry."
         self.press = press.PressTimer(SPACE_LONG_S)        # space short/long classifier
         self._now = time.perf_counter                      # injectable clock (headless tests)
@@ -141,6 +151,9 @@ class StagedApp:
         self._ringing.clear()
         self._held_key_midi.clear()
         self._press_midi.clear()
+        self._mouse_active = False                         # drop any in-flight mouse gesture
+        self._mouse_note = None
+        self._mouse_down_midi = None
         self.press.cancel()                                # drop any in-flight press (space or note)
         self.router = InputRouter(tuning=self._tuning)     # keep the temperament
         if clear_staged:
@@ -229,25 +242,81 @@ class StagedApp:
         elif action == "save":    self._save_chord()
         elif action == "release": self._release_staged()
 
-    # --- mouse hit-test (step 3) ----------------------------------------------
+    # --- mouse hit-test + drag (steps 3-4) ------------------------------------
 
     def _hit(self, pos):
         """Resolve a screen point to `(region, payload)` (or None) via the coarse-to-fine
         core. The single seam the mouse goes through; also the selftest's assertion point."""
         return hittest.pick(pos, self._regions)
 
-    def _on_click(self, pos) -> None:
-        """Act on a left-click. Step 3 is STRUCTURAL: only HUD buttons act (unchanged from
-        the old direct `Hud.hit` path). A piano-key hit is resolved but is a deliberate
-        no-op SEAM — step 4 (mouse in staged mode) wires it here, reusing the mouse_input
-        drag model (one active mouse note, glissando, off-on-empty; never `set_grab`)."""
+    def _key_under(self, pos) -> int | None:
+        """The piano-key midi under `pos`, or None (over the keyboard's background, another
+        region, or off-window). Used by the drag model as the cursor moves."""
+        hit = self._hit(pos)
+        if hit is not None and hit[0] is hittest.Region.KEYBOARD and isinstance(hit[1], int):
+            return hit[1]
+        return None
+
+    def _mouse_to(self, midi: int | None) -> None:
+        """Move the single active mouse note to `midi` (or None) as the cursor travels. Live
+        mode sustains it via the router (glissando: off the old, on the new); staged mode
+        auditions each newly-entered key (explore) with no sustain. No-op if unchanged."""
+        if midi == self._mouse_note:
+            return
+        if self.mode == "live":
+            if self._mouse_note is not None:
+                self._release(self._mouse_note)
+            if midi is not None:
+                self._press(midi)
+        elif midi is not None:                     # staged: audition on entering a key
+            self._audition(midi)
+        self._mouse_note = midi
+
+    def _mouse_press(self, pos, shift: bool) -> None:
+        """Left-button down. HUD buttons act immediately (as before). On the keyboard a drag
+        gesture begins: audition/press the key now; staging (staged mode) waits for button-up.
+        Shift+click on a key is the immediate toggle/forget gesture (auditions when it stages),
+        matching Shift+note on the computer keyboard."""
         hit = self._hit(pos)
         if hit is None:
             return
         region, payload = hit
-        if region is hittest.Region.HUD and isinstance(payload, str):
-            self._hud_action(payload)              # mouse drives HUD buttons (action strings)
-        # Region.KEYBOARD, and any background (payload None): resolved, no action yet (step 4).
+        if region is hittest.Region.HUD:
+            if isinstance(payload, str):
+                self._hud_action(payload)          # mouse drives HUD buttons (action strings)
+            return
+        # Region.KEYBOARD: begin a drag gesture (even over a 1-px gap: payload None).
+        self._mouse_active = True
+        self._mouse_note = None
+        midi = payload if isinstance(payload, int) else None
+        if self.mode == "staged" and shift and midi is not None:
+            self._stage_shift(midi)                # toggle/forget now; _stage_shift auditions on add
+            self._mouse_down_midi = None           # a shift-click does not stage again on release
+            self._mouse_note = midi
+            return
+        self._mouse_to(midi)                        # live: press it; staged: audition it
+        self._mouse_down_midi = midi               # staged: stage on release iff we end here
+
+    def _mouse_drag(self, pos) -> None:
+        """Left-button motion. Only meaningful once a keyboard gesture is active; the active
+        mouse note follows the cursor (glissando in live; audition-sweep in staged)."""
+        if self._mouse_active:
+            self._mouse_to(self._key_under(pos))
+
+    def _mouse_release(self, pos) -> None:
+        """Left-button up. Live mode releases the sustained note. Staged mode stages the note
+        the gesture began on -- but only if it ends on that same key (a drag away cancels the
+        stage; the audition on button-down already gave feedback)."""
+        if not self._mouse_active:
+            return
+        if self.mode == "live":
+            self._mouse_to(None)                    # release the sustained note
+        elif self._mouse_down_midi is not None and self._mouse_note == self._mouse_down_midi:
+            self._stage(self._mouse_down_midi)
+            self.hint = f"Staged {note_name(self._mouse_down_midi)}."
+        self._mouse_active = False
+        self._mouse_note = None
+        self._mouse_down_midi = None
 
     # --- event dispatch -------------------------------------------------------
 
@@ -323,7 +392,17 @@ class StagedApp:
             return True
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            self._on_click(event.pos)                       # coarse-to-fine hit-test (step 3)
+            # Mouse events carry no `.mod`; read live modifier state (tests inject `mod=`).
+            mods = getattr(event, "mod", None)
+            if mods is None:
+                mods = pygame.key.get_mods()
+            self._mouse_press(event.pos, bool(mods & pygame.KMOD_SHIFT))
+            return True
+        if event.type == pygame.MOUSEMOTION:
+            self._mouse_drag(event.pos)                     # glissando / audition-sweep
+            return True
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            self._mouse_release(event.pos)
             return True
 
         return True

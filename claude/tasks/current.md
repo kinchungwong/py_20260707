@@ -37,10 +37,17 @@ feel-evaluated; at a **resting point** pending the chord-editing surface.
   + the library `gui.hit_test`; `MOUSEBUTTONDOWN` routes through it. **Foundational — no
   behaviour change** (HUD acts as before; piano-key hits resolve to a no-op seam). Piano +
   sine selftest green, `run_spike_tests.py` 14/14.
-- **Next mechanical step — step 4 (C): mouse in staged mode** — wire the resolved
-  keyboard/launcher hits to action (click to stage/explore chords, manage launcher
-  bindings), reusing the `mouse_input` drag model. The per-key-type press-duration
-  reliability check on real hardware also remains open.
+- **Step 4 — mouse in staged mode (C) — built + selftest green (2026-07-14), pending the
+  human gate.** Sidecar: **[`mouse-in-staged.md`](mouse-in-staged.md)**. Fills step 3's
+  `Region.KEYBOARD` seam via the `mouse_input` glissando drag model: **live** = sustained
+  router play (down/drag/empty/up); **staged** = audition on button-down, stage on
+  button-up iff the gesture ends on the down-key (drag away cancels), Shift+click
+  toggles/forgets. Launcher-slot clicking deferred to F (Save/Play/Release stay on HUD
+  buttons). Piano + sine green, `run_spike_tests.py` 14/14, mypy + pyright clean, doc-links
+  OK. **C is the last work in scope for this spike;** it now awaits the human gate — manual
+  test on a real device + manual review, then commit (see
+  [`../memory/process/c-review-and-merge-handoff.md`](../memory/process/c-review-and-merge-handoff.md)).
+  The per-key-type press-duration reliability check on real hardware also remains open.
 
 **v1 decisions that still hold** (still in force): audition via
 the `pygame.mixer` one-shot sine behind `_audition()`; commit path = fire-and-forget
