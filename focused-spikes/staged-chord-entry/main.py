@@ -76,6 +76,23 @@ def _selftest(voice, tuning, label) -> None:
 
         app.render()                                   # live-mode HUD draws without error
 
+        # coarse-to-fine mouse hit-test (step 3): resolution correct, mode-aware, order-safe.
+        # Pure geometry -> asserts headlessly; no behaviour, just (region, gadget) resolution.
+        import hittest
+        R = hittest.Region
+        # Points are taken from the concrete widget rects (real pygame.Rects), NOT from
+        # app._regions[i][1] — those are typed as the narrow CollidePoint protocol on purpose.
+        scr_w, scr_h = app.screen.get_width(), app.screen.get_height()
+        wk0, bk0 = app.wk[0], app.bk[0]
+        assert app._hit(app.hud.mode_rect.center) == (R.HUD, "mode")     # HUD button -> action
+        assert app._hit((scr_w // 2, 3)) == (R.HUD, None)                # HUD background -> no gadget
+        assert app.mode == "live"
+        assert app._hit(app.hud.save_rect.center) == (R.HUD, None)       # staged-only btn: inert in live
+        assert app._hit(wk0.rect.center) == (R.KEYBOARD, wk0.midi)       # white key -> its midi
+        assert any(w.rect.collidepoint(bk0.rect.center) for w in app.wk), "test point is not an overlap"
+        assert app._hit(bk0.rect.center) == (R.KEYBOARD, bk0.midi)       # black-over-white: black wins
+        assert app._hit((wk0.rect.centerx, scr_h - 3)) is None           # below keyboard -> no region
+
         # live mode: hold a note -> one voice, then release -> silent
         kd("a")
         assert app.router.held == {60}, app.router.held

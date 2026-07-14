@@ -21,11 +21,24 @@
   when the melody spike reuses it. **Extended to staged NOTE keys** (user feedback): a short
   tap auditions only, a long hold auditions + stages — one idiom (short = trial, long =
   commit) across the trial→record flow.
-- **Resting point (2026-07-13).** Chord launcher + press-duration are feel-evaluated and the
-  user's verdict is positive. Next awaited feature: **editing saved chords** (the visibility /
-  editing surface), deferred pending a UI-pane-modularization refactor + architecture review.
-  Next mechanical step: plan step 3 (mouse hit-test core). Per-key-type press-duration check
-  on real hardware still open.
+- **Mouse hit-test core (2026-07-14)** — step 3 (dependency **B**). A coarse-to-fine
+  `(region, gadget)` resolver (`hittest.py`): `pick(pos, regions)` walks topmost-first
+  `RegionSpec`s and the first whose coarse rect contains the point claims it (opaque, no
+  fall-through), returning `(Region, payload)` — an action string for HUD, a midi for the
+  keyboard, or `None` for region background. Two regions wired (HUD honours mode via its
+  closure; KEYBOARD reuses the library's black-first `hit_test`); the `MOUSEBUTTONDOWN`
+  path now routes through it. **Structural only — no behaviour change:** HUD buttons act as
+  before; a piano-key hit is resolved but is a documented no-op **seam for step 4**.
+  Launcher-slot clickability stays out (its readout sits inside the HUD strip — step 4 /
+  pane refactor). `--selftest` asserts resolution: HUD button→action, HUD background→None,
+  a staged-only button inert in live mode, white→midi, black-over-white order guard, and
+  below-keyboard→None. Liftable to `shared/` when the melody spike (step 5) needs it.
+- **Resting point (2026-07-14).** Chord launcher + press-duration are feel-evaluated
+  (positive verdict); the mouse hit-test core is built and selftest-green. Next awaited
+  feature: **editing saved chords** (the visibility / editing surface), deferred pending a
+  UI-pane-modularization refactor + architecture review. Next mechanical step: **step 4 —
+  mouse in staged mode** (wire the resolved keyboard/launcher hits to action). Per-key-type
+  press-duration check on real hardware still open.
 
 Auditions use a lightweight `pygame.mixer` one-shot sine (`audition.py`) — a deliberate
 SECOND acoustic authority, taken on knowingly to keep the spike simple. It is kept behind

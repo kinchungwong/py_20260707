@@ -40,7 +40,9 @@ chain headlessly and asserts a committed chord actually sounds and the HUD rende
   empty launcher slot), **Release**.
 - **Esc** / close window — quit. (Note: **q** shifts the window; it does **not** quit.)
 
-Keyboard-first: the mouse drives only the HUD buttons, not the piano keys (v1 scope).
+Keyboard-first: the mouse still **acts** on the HUD buttons only. As of step 3 a
+coarse-to-fine hit-test core (`hittest.py`) resolves clicks to `(region, gadget)` across
+the whole window — piano-key hits are now *resolved*, but wiring them to action is step 4.
 
 ## What's baked in (spike-simple — the pinned decisions)
 
@@ -68,6 +70,8 @@ Keyboard-first: the mouse drives only the HUD buttons, not the piano keys (v1 sc
 - `layout.py` — the 3-octave keyboard geometry + the slidable `InputWindow` (computer-key →
   midi mapping with the `q`/`\` shift).
 - `hud.py` — the HUD strip (pygame-drawn) + multi-state keyboard painting.
+- `hittest.py` — the coarse-to-fine mouse hit-test core (step 3): `Region`/`RegionSpec` +
+  `pick(pos, regions)`. Pure geometry, no app state; liftable to `shared/`.
 - `audition.py` — the `pygame.mixer` one-shot audition (numpy + pygame only).
 
 ## Finding
