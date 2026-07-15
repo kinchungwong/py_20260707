@@ -11,9 +11,17 @@ dependencies = ["numpy", "sounddevice", "pygame", "sortedcontainers", "cffi"]
 
 [project.optional-dependencies]
 # Dev/test toolchain — declares intent; exact pins live in requirements.txt. Install directly
-# (`pip install pytest mypy pyright`), NOT via `-e .`: the library is run from src/ on sys.path
-# (shared/bootstrap.py), never pip-installed. See requirements.txt.
-dev = ["pytest", "mypy", "pyright"]
+# (`pip install pytest pytest-cov coverage mypy pyright vulture hypothesis diff-cover mutmut`),
+# NOT via `-e .`: the library is run from src/ on sys.path (shared/bootstrap.py), never
+# pip-installed. See requirements.txt.
+dev = [
+    "pytest", "pytest-cov", "coverage",   # test runner + coverage
+    "hypothesis",                          # property-based testing (DSP-math modules)
+    "mypy", "pyright",                     # type checking
+    "vulture",                             # static dead-code detection
+    "diff-cover",                          # coverage of changed lines only
+    "mutmut",                              # mutation testing (test-quality; later-stage)
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -25,6 +33,36 @@ markers = [
     "perf: machine-dependent timing assertions (deselected by default)",
     "slow: threaded / longer-running tests",
 ]
+
+# --- coverage --------------------------------------------------------------------------
+# Opt-in via `pytest --cov` (NOT in addopts — keep normal runs fast). branch=true surfaces
+# never-TAKEN branches (the design-feedback signal), not just unexecuted lines. exclude_also
+# drops lines that are never meant to run, so reported gaps mean real dead code — chasing
+# 100% is a non-goal. NOTE: coverage gap = "untested by the suite"; for truly unreferenced
+# code use vulture. See requirements.txt for the pinned tools.
+[tool.coverage.run]
+branch = true
+source = ["src/pypiano_2607"]
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "@overload",
+]
+
+# --- mutation testing ------------------------------------------------------------------
+# Later-stage / test-quality tool. mutmut copies source into a `mutants/` dir (gitignored)
+# and re-runs the suite per mutation; it invokes pytest so the `addopts` above apply.
+# Runnability against this repo's src-layout + sys.path bootstrap is UNVERIFIED — confirm a
+# real `mutmut run` before relying on it. Key is `source_paths` (3.x; `paths_to_mutate` is
+# deprecated).
+[tool.mutmut]
+source_paths = ["src/pypiano_2607"]
 
 # --- type checking ----------------------------------------------------------------------
 # The library (src/) is a package; the active spike is a set of FLAT modules resolved at
